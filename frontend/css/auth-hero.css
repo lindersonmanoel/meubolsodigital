@@ -104,6 +104,27 @@
   flex-shrink: 0;
 }
 
+/* Ilustracao decorativa (seta de crescimento + moeda + carteira com grafico), bem clara,
+   flutuando do lado direito - so' em telas largas, pra nao brigar com o cartao. */
+.auth-ilustracao {
+  position: absolute;
+  top: 50%;
+  right: clamp(16px, 4vw, 64px);
+  transform: translateY(-50%);
+  width: clamp(260px, 22vw, 420px);
+  color: rgba(13, 59, 102, 0.1);
+  z-index: 1;
+  pointer-events: none;
+}
+.auth-ilustracao svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+@media (max-width: 1200px) {
+  .auth-ilustracao { display: none; }
+}
+
 .auth-recursos {
   position: relative;
   z-index: 1;
