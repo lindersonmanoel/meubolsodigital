@@ -58,7 +58,7 @@ function montarShell(paginaAtiva) {
           <button type="button" class="app-menu-btn" id="btn-menu" aria-label="Abrir menu">${ICONES.menu}</button>
           <div class="app-topbar-direita">
             <span class="hint" id="saudacao">${cache ? cache.email : ""}</span>
-            <button type="button" class="btn-ajuda-tour" id="btn-ajuda" title="Fazer um tour guiado pelo site" aria-label="Fazer um tour guiado pelo site">?</button>
+            <button type="button" class="btn-ajuda-tour" id="btn-ajuda" data-dica="Iniciar tour" aria-label="Iniciar tour guiado pelo site">?</button>
           </div>
         </header>
         <main class="app-conteudo" id="app-conteudo"></main>

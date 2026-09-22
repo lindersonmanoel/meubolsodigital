@@ -445,8 +445,9 @@ table.tabela tbody tr:hover { background: #f8fafc; }
 }
 
 .btn-ajuda-tour {
-  background: none;
-  border: 1px solid var(--borda);
+  position: relative;
+  background: var(--verde);
+  border: none;
   border-radius: 50%;
   width: 30px;
   height: 30px;
@@ -454,12 +455,41 @@ table.tabela tbody tr:hover { background: #f8fafc; }
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: var(--azul-escuro);
+  color: #fff;
   font-weight: 700;
   flex-shrink: 0;
 }
-.btn-ajuda-tour:hover {
-  background: var(--bg);
+.btn-ajuda-tour:hover,
+.btn-ajuda-tour:focus-visible {
+  background: var(--verde-escuro);
+}
+
+/* Dica em texto (mais visivel que o title nativo do navegador) - aparece ao passar o mouse
+   ou focar o botao com o teclado. */
+.btn-ajuda-tour[data-dica]::after {
+  content: attr(data-dica);
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--azul-escuro);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  padding: 6px 10px;
+  border-radius: 6px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity 0.15s, transform 0.15s;
+  pointer-events: none;
+  z-index: 50;
+}
+.btn-ajuda-tour[data-dica]:hover::after,
+.btn-ajuda-tour[data-dica]:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
 }
 
 .spinner-carregando {
