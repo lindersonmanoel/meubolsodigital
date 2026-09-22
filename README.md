@@ -1,98 +1,125 @@
 # Meu Bolso Digital
 
-Aplicação web de controle financeiro pessoal: registro de receitas e despesas, categorias,
-metas e relatórios, com indicadores visuais para acompanhar a situação financeira.
+Aplicação web de controle financeiro pessoal: receitas, despesas, contas fixas recorrentes,
+orçamento por categoria, metas e relatórios, com um dashboard visual pra acompanhar a situação
+financeira de relance.
 
 Frontend estático (HTML, CSS e JavaScript puro, sem build) hospedado na Vercel. Backend
-próprio em Node.js e Express, com banco de dados PostgreSQL próprio. Sem Supabase: toda
-comunicação entre o frontend e o banco passa pela API do backend.
-
-## Status do desenvolvimento
-
-O projeto é construído por fases, conforme o documento de desenvolvimento original, validando
-cada etapa antes de avançar para a próxima.
-
-| Fase | Entrega | Situação |
-|---|---|---|
-| 1 | Estrutura (frontend, backend, banco) | Pronta |
-| 2 | Autenticação (cadastro, login, sessão, hash de senha) | Pronta |
-| 3 | Receitas, despesas, categorias, movimentações, saldo | Pronta |
-| 4 | Dashboard e gráficos | Pronta |
-| 5 | Metas financeiras | Pronta |
-| 6 | Relatórios | Pronta |
-| 7 | PWA (instalação, ícone, modo offline) | Pronta |
-| 8 | Segurança adicional (revisão de permissões) | Parcial (veja abaixo) |
-| 9 | Deploy (Vercel, backend, banco, domínio) | Pronta (veja "No ar" abaixo) |
-| 10 | Testes finais de tudo | Parcial (68 testes automatizados + fluxo completo verificado em produção) |
+próprio em Node.js e Express, com banco de dados PostgreSQL próprio, hospedado no Railway.
+Sem Supabase: toda comunicação entre o frontend e o banco passa pela API do backend.
 
 ## No ar
 
 - **App**: https://meu-bolso-digital-web.vercel.app
-- **API**: https://backend-production-827d.up.railway.app/api (Railway; não acesse direto, é só pro frontend)
-- Frontend na Vercel (conta `lindersonmanoel`, deploy automático a cada push no GitHub).
-  Backend + PostgreSQL no Railway (mesma conta), no plano gratuito de créditos - sem domínio
-  próprio por enquanto (ficou combinado usar só os endereços padrão da Vercel/Railway).
-- Repositório: https://github.com/lindersonmanoel/meubolsodigital
+- **API**: https://backend-production-827d.up.railway.app/api (só pro frontend consumir, não é feita pra acesso direto)
+- **Repositório**: https://github.com/lindersonmanoel/meubolsodigital
+- Frontend na Vercel (deploy automático a cada push no GitHub). Backend + PostgreSQL no
+  Railway (rede interna, sem porta pública exposta no banco). Endereços padrão das duas
+  plataformas (`*.vercel.app` e `*.up.railway.app`), sem domínio próprio por enquanto.
 
-## O que já está entregue (Fases 1 a 7)
+## Funcionalidades
 
-- Cadastro de conta, login com token JWT e sessão mantida no navegador (localStorage), com
-  redirecionamento automático (quem não está logado não acessa o app; quem já está logado não
-  vê login/cadastro de novo).
-- Perfil: trocar nome/e-mail (`PUT /api/users/me`) e trocar senha (`PUT /api/users/senha`).
-- **Categorias**: criar, editar e excluir, por tipo (receita/despesa), sem duplicar nome+tipo.
+- **Conta e sessão**: cadastro, login com token JWT, sessão no navegador, trocar nome/e-mail
+  e trocar senha.
+- **Categorias**: criar, editar e excluir, separadas por tipo (receita/despesa). Não deixa
+  duplicar nome+tipo, nem trocar o tipo de uma categoria que já tem movimentação, recorrência
+  ou orçamento ligados a ela (evita dado inconsistente).
 - **Receitas, despesas e movimentações**: cadastro com descrição, valor, data, categoria
   opcional e observação; edição; exclusão; filtros por tipo, categoria, período e busca por
-  descrição. `/api/receitas` e `/api/despesas` são atalhos pré-filtrados de `/api/movimentacoes`.
-- **Dashboard**: cartões de saldo atual, receitas do mês, despesas do mês e resultado do mês;
-  gráfico de barras (receitas x despesas dos últimos 6 meses) e gráfico de rosca (despesas por
-  categoria no mês), com Chart.js.
+  descrição; exportação em CSV.
+- **Recorrências**: contas fixas (aluguel, salário, assinaturas) com dia do mês pra lançar -
+  a movimentação do mês é gerada sozinha (sem duplicar) sempre que o dashboard é aberto.
+- **Orçamentos**: limite de gasto mensal por categoria, com o quanto já foi gasto no mês,
+  percentual e aviso quando fica perto ou passa do limite.
+- **Dashboard**: saldo atual, receitas/despesas/resultado do mês, gráfico de barras (receitas
+  x despesas dos últimos 6 meses) e gráfico de rosca (despesas por categoria no mês), com
+  Chart.js.
 - **Metas financeiras**: valor objetivo, valor já guardado, prazo opcional, barra de progresso
   (nunca passa de 100%, mesmo ultrapassando o objetivo).
-- **Relatórios**: totais de receitas/despesas, saldo e categoria com maior gasto num período
-  escolhido, com tabela de despesas por categoria.
-- **PWA**: `manifest.json` + service worker (guarda a interface em cache pra abrir rápido e
-  funcionar offline; nunca guarda dados financeiros da API em cache).
-- Navegação por menu lateral (colapsa em menu deslizante no celular) em todas as telas logadas.
-- Segurança desde a base: senha com hash (bcrypt), limite de tentativas por IP, CORS restrito,
-  cabeçalhos de segurança (Helmet), corpo de requisição limitado, mensagens de erro que nunca
-  revelam detalhe interno, e cada usuário só acessa os próprios dados (toda consulta filtrada
-  pelo `usuario_id` do token, nunca por um valor vindo do cliente).
+- **Relatórios**: totais, saldo e categoria com maior gasto num período escolhido; exportação
+  em CSV ou PDF (via impressão do navegador).
+- **PWA instalável**: em Android, iPhone/iPad, Windows e Mac. Botão "Instalar agora" quando o
+  navegador oferece o instalador nativo, e passo a passo manual pra cada plataforma (inclui
+  iPhone/iPad no Safari, que não tem instalador automático) - aparece no login, no cadastro e
+  no dashboard. Funciona offline pra abrir rápido (nunca guarda dados financeiros em cache).
+- **Tour guiado**: botão "?" sempre visível no topo, mostra uma explicação de cada tela
+  principal, com destaque visual no elemento e navegação entre as páginas.
+- Menu lateral (colapsa em menu deslizante no celular) em todas as telas logadas.
+
+## Segurança
+
+- Senhas com hash bcrypt (12 rounds), nunca guardadas nem devolvidas em texto puro.
+- JWT sem estado; o segredo (`JWT_SECRET`) é forte e exclusivo de cada ambiente.
+- Limite de tentativas de cadastro/login por IP (`express-rate-limit`), contra força bruta -
+  já preparado pra rodar atrás de proxy (Railway) sem quebrar (`trust proxy`).
+- Mensagem de erro de login genérica ("e-mail ou senha inválidos"): não revela se o e-mail
+  existe.
+- CORS restrito ao `FRONTEND_URL` configurado; cabeçalhos de segurança via Helmet; respostas
+  comprimidas (gzip).
+- Exportação em CSV protegida contra injeção de fórmula (um valor que comece com `=`, `+`,
+  `-` ou `@` vem prefixado com apóstrofo, pra não virar fórmula executável se abrir no Excel).
+- Corpo de requisição limitado a 100 KB; erro de JSON malformado tratado (não derruba a API).
+- Erros não mapeados nunca vazam detalhe interno (consulta SQL, stack trace) para o cliente.
+- Cada usuário só acessa os próprios dados: toda consulta ao banco já nasce filtrada pelo
+  `usuario_id` extraído do token (`req.usuarioId`), nunca de um valor enviado pelo cliente.
 
 ## Estrutura do projeto
 
 ```
 MeuBolsoDigital/
-├── frontend/            HTML, CSS e JS puro (sem build), pronto pra Vercel
-│   ├── index.html        redireciona pra login ou dashboard conforme a sessão
+├── frontend/                HTML, CSS e JS puro (sem build), pronto pra Vercel
+│   ├── index.html            redireciona pra login ou dashboard conforme a sessão
 │   ├── login.html, cadastro.html
-│   ├── dashboard.html    cartões + gráficos (Chart.js)
+│   ├── dashboard.html        cartões + gráficos (Chart.js)
 │   ├── categorias.html, movimentacoes.html, receitas.html, despesas.html
-│   ├── metas.html, relatorios.html, configuracoes.html
-│   ├── manifest.json, service-worker.js   PWA
-│   ├── css/               global.css, layout.css, shell.css (menu lateral/tabelas), responsive.css
-│   ├── js/                 api.js (cliente HTTP), auth.js (sessão), shell.js (menu lateral),
-│   │                        movimentacoes.js (motor de receitas/despesas/movimentações),
-│   │                        pwa.js (registra o service worker), config.js (endereço da API)
-│   ├── assets/images/     logo.png
-│   └── vercel.json        cabeçalhos de segurança pro deploy
-├── backend/              API Node.js + Express
+│   ├── recorrencias.html, orcamentos.html, metas.html, relatorios.html, configuracoes.html
+│   ├── manifest.json, service-worker.js     PWA
+│   ├── css/                  global.css, layout.css, shell.css (menu lateral/tabelas/tour/
+│   │                          instalador), responsive.css, print.css (relatório em PDF)
+│   ├── js/                   api.js (cliente HTTP), auth.js (sessão), shell.js (menu lateral),
+│   │                          movimentacoes.js (motor de receitas/despesas/movimentações),
+│   │                          pwa.js (service worker + instalador do app), tour.js (tour
+│   │                          guiado), config.js (endereço da API)
+│   ├── assets/images/        logo.png (marca completa), logo-icon.png (ícone redondo,
+│   │                          usado no favicon/sidebar/instalação), logo-maskable.png
+│   │                          (ícone adaptativo do Android)
+│   └── vercel.json           cabeçalhos de segurança pro deploy
+├── backend/                 API Node.js + Express
 │   ├── src/
 │   │   ├── controllers/, routes/, services/, middleware/, models/, database/, utils/
-│   │   ├── app.js         monta o Express (usado pelos testes, sem abrir porta)
-│   │   ├── config.js      lê e valida as variáveis de ambiente
-│   │   └── server.js      ponto de entrada (sobe o servidor de verdade)
-│   ├── tests/             Jest + Supertest (68 testes)
+│   │   ├── app.js             monta o Express (usado pelos testes, sem abrir porta)
+│   │   ├── config.js          lê e valida as variáveis de ambiente
+│   │   └── server.js          ponto de entrada (sobe o servidor de verdade)
+│   ├── tests/                 Jest + Supertest (89 testes)
 │   ├── .env.example
 │   └── package.json
-├── database/migrations/   SQL versionado (001_init.sql cria as 4 tabelas)
-├── docker-compose.yml     PostgreSQL local pra desenvolvimento/teste
-├── Dockerfile             imagem de produção do backend (usada pelo Railway hoje)
-├── docker-compose.prod.yml   stack alternativa pra VM própria (Postgres + backend + Cloudflare Tunnel)
-├── .env.production.example   modelo de variáveis pra essa stack alternativa
-├── DEPLOY.md              roteiro da stack alternativa (VM + Docker + Cloudflare Tunnel)
+├── database/migrations/      SQL versionado (001_init.sql: usuários/categorias/movimentações/
+│                              metas; 002_recorrencias_orcamentos.sql: recorrências e orçamentos)
+├── docker-compose.yml         PostgreSQL local pra desenvolvimento/teste
+├── Dockerfile                 imagem de produção do backend (usada pelo Railway hoje)
+├── docker-compose.prod.yml    stack alternativa pra VM própria (Postgres + backend + Cloudflare Tunnel)
+├── .env.production.example    modelo de variáveis pra essa stack alternativa
+├── DEPLOY.md                  roteiro da stack alternativa (VM + Docker + Cloudflare Tunnel)
 └── README.md
 ```
+
+## API (visão geral)
+
+Tudo debaixo de `/api`, autenticado com `Authorization: Bearer <token>` (exceto onde marcado).
+
+| Recurso | Rotas |
+|---|---|
+| Auth | `POST /auth/register`, `POST /auth/login` *(sem token)*, `GET /auth/me`, `POST /auth/logout` |
+| Perfil | `PUT /users/me`, `PUT /users/senha` |
+| Categorias | `GET/POST /categorias`, `PUT/DELETE /categorias/:id` |
+| Movimentações | `GET/POST /movimentacoes`, `PUT/DELETE /movimentacoes/:id`, `GET /movimentacoes/exportar` (CSV) |
+| Receitas / Despesas | iguais a movimentações, em `/receitas` e `/despesas` (tipo já vem fixo) |
+| Recorrências | `GET/POST /recorrencias`, `PUT/DELETE /recorrencias/:id` |
+| Orçamentos | `GET/POST /orcamentos`, `PUT/DELETE /orcamentos/:id` |
+| Metas | `GET/POST /metas`, `PUT/DELETE /metas/:id` |
+| Dashboard | `GET /dashboard/resumo`, `GET /dashboard/graficos` |
+| Relatórios | `GET /relatorios`, `GET /relatorios/exportar` (CSV) |
+| Saúde | `GET /health` *(sem token)* |
 
 ## Como rodar localmente
 
@@ -129,7 +156,7 @@ Edite o `.env`: aponte `DATABASE_URL` pro banco acima (ou outro PostgreSQL seu) 
 node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 ```
 
-Aplique a migração e suba a API:
+Aplique as migrações e suba a API:
 
 ```bash
 npm run migrate
@@ -152,7 +179,7 @@ Abra `http://localhost:5500` (ou o endereço mostrado). Se usar outra porta, atu
 
 ### 4. Testes automatizados
 
-Antes da primeira vez, aplique a migração no banco de teste também (é um banco separado do
+Antes da primeira vez, aplique as migrações no banco de teste também (é um banco separado do
 de desenvolvimento, criado no passo 1):
 
 ```bash
@@ -161,16 +188,15 @@ node -e "require('dotenv').config({path:'.env.test'}); require('./src/database/m
 npm test
 ```
 
-68 testes (Jest + Supertest), rodando contra um PostgreSQL de teste de verdade (aponte
-`backend/.env.test` pro seu banco de teste; por padrão usa o mesmo Docker acima). Cobre
+89 testes (Jest + Supertest), rodando contra um PostgreSQL de teste de verdade. Cobre
 cadastro, login, troca de senha, validação de campos, hash de senha, rota protegida,
-atualização de perfil, categorias, receitas/despesas/movimentações (com filtros), metas
-(incluindo o teto de 100% de progresso), dashboard, relatórios, CORS, limite de tentativas,
-isolamento entre usuários (cada pessoa só vê e mexe nos próprios dados) e erros tratados
-(404, JSON inválido, IDs inválidos) sem vazar detalhe interno. Rode com `npm test` (usa
-`--runInBand`: os testes truncam as tabelas entre si, então precisam rodar em série, não em
-paralelo). O fluxo completo (cadastro → login → categoria → receita/despesa → dashboard →
-meta → relatório → troca de senha) também foi verificado de ponta a ponta contra a API real.
+atualização de perfil, categorias (incluindo o bloqueio de trocar tipo em uso), receitas/
+despesas/movimentações (com filtros e exportação CSV), recorrências (geração automática sem
+duplicar), orçamentos (percentual e situação), metas (com o teto de 100% de progresso),
+dashboard, relatórios, proteção contra injeção de fórmula no CSV, CORS, limite de tentativas,
+isolamento entre usuários (cada pessoa só vê e mexe nos próprios dados) e erros tratados sem
+vazar detalhe interno. Rode com `npm test` (usa `--runInBand`: os testes truncam as tabelas
+entre si, então precisam rodar em série, não em paralelo).
 
 ## Variáveis de ambiente (backend)
 
@@ -187,22 +213,6 @@ meta → relatório → troca de senha) também foi verificado de ponta a ponta 
 O `.env` nunca deve ir para o Git (já está no `.gitignore`). Em produção, sem essas três
 variáveis obrigatórias preenchidas, o servidor recusa iniciar.
 
-## Segurança
-
-- Senhas com hash bcrypt (12 rounds), nunca guardadas nem devolvidas em texto puro.
-- JWT sem estado; o segredo (`JWT_SECRET`) precisa ser forte e exclusivo de cada ambiente.
-- Limite de tentativas de cadastro/login por IP (`express-rate-limit`), contra força bruta.
-- Mensagem de erro de login genérica ("e-mail ou senha inválidos"): não revela se o e-mail
-  existe, evitando que alguém descubra contas cadastradas só tentando login.
-- CORS restrito ao `FRONTEND_URL` configurado; cabeçalhos de segurança via Helmet.
-- Corpo de requisição limitado a 100 KB; erro de JSON malformado tratado (não derruba a API).
-- Erros não mapeados nunca vazam detalhe interno (consulta SQL, stack trace) para o cliente.
-- Cada usuário só acessa os próprios dados: toda consulta ao banco já nasce filtrada pelo
-  `usuario_id` extraído do token (`req.usuarioId`), nunca de um valor enviado pelo cliente.
-- Pendente pra quando o projeto for exposto na internet de verdade (fase de deploy): HTTPS
-  de ponta a ponta (a Vercel já entrega isso no frontend; o backend precisa de um provedor
-  com HTTPS ou um proxy reverso na frente) e revisão de permissões antes de cada nova fase.
-
 ## Deploy (como está publicado hoje)
 
 - **Frontend**: repositório no GitHub (`lindersonmanoel/meubolsodigital`) → projeto na Vercel
@@ -213,8 +223,6 @@ variáveis obrigatórias preenchidas, o servidor recusa iniciar.
   sem porta pública exposta). Variáveis de ambiente configuradas direto no serviço `backend`
   (`railway variables --service backend`), com `DATABASE_URL` referenciando o Postgres
   (`${{Postgres.DATABASE_URL}}`) e `JWT_SECRET` gerado só pra produção.
-- **Domínio**: por decisão do projeto, ficou nos endereços padrão (`*.vercel.app` e
-  `*.up.railway.app`), sem domínio próprio por enquanto.
 - **Atualizar o deploy depois de mudar o código**: o normal é só `git push` (Vercel e Railway
   têm deploy automático a cada push). Pra forçar manualmente sem esperar o push:
   ```bash
@@ -243,15 +251,8 @@ completo em [`DEPLOY.md`](DEPLOY.md).
 
 ## Próximos passos
 
-Com as Fases 1 a 9 entregues (auth, receitas/despesas/categorias/movimentações, dashboard,
-metas, relatórios, PWA e deploy), falta:
-
-- **Fase 8** (rótulo do documento original, mas cabe revisitar periodicamente): uma nova
-  revisão de segurança agora que existem mais rotas autenticadas (já seguem o mesmo padrão de
-  isolamento por `usuario_id` das rotas anteriores, mas vale conferir de novo de tempos em
-  tempos, sobretudo antes de expor a um público maior ou trocar pra domínio próprio).
-- **Fase 10**: mais testes automatizados cobrindo o ambiente de produção (hoje o fluxo
-  completo já foi verificado manualmente contra o Railway/Vercel reais, mas ainda não faz
-  parte da suíte automatizada do CI).
-- Domínio próprio (`lumvix.com.br` ou outro) e transferir os projetos Vercel/Railway pra
-  conta definitiva, se um dia fizer sentido sair dos endereços padrão.
+- Domínio próprio e transferir os projetos Vercel/Railway pra conta definitiva, se um dia
+  fizer sentido sair dos endereços padrão.
+- Mais testes automatizados cobrindo o ambiente de produção direto (hoje o fluxo é verificado
+  manualmente contra o Railway/Vercel reais a cada mudança, mas ainda não faz parte de um CI).
+- Revisão de segurança periódica conforme o app ganha mais rotas/funcionalidades.
