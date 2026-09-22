@@ -84,4 +84,19 @@ describe("relatorios", () => {
     const res = await request(app).get("/api/relatorios?inicio=2026-01-01&fim=2026-12-31").set(headers);
     expect(res.body.totalReceitas).toBe(0);
   });
+
+  test("exporta o relatorio completo em Excel (.xlsx), com varias abas", async () => {
+    const { headers } = await criarUsuarioAutenticado(app);
+    const categoria = await request(app).post("/api/categorias").set(headers).send({ nome: "Mercado", tipo: "despesa" });
+    await request(app).post("/api/despesas").set(headers).send({
+      descricao: "Compras", valor: 100, data: "2026-03-05", categoriaId: categoria.body.categoria.id,
+    });
+    await request(app).post("/api/metas").set(headers).send({ nome: "Viagem", valorObjetivo: 1000, valorAtual: 200 });
+    await request(app).post("/api/orcamentos").set(headers).send({ categoriaId: categoria.body.categoria.id, valorLimite: 500 });
+
+    const res = await request(app).get("/api/relatorios/exportar-excel?inicio=2026-03-01&fim=2026-03-31").set(headers);
+    expect(res.status).toBe(200);
+    expect(res.headers["content-type"]).toBe("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    expect(res.headers["content-disposition"]).toContain(".xlsx");
+  });
 });

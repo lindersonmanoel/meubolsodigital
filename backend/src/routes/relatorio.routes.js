@@ -8,5 +8,6 @@ const router = Router();
 router.use(requireAuth);
 router.get("/", controller.relatorio);
 router.get("/exportar", controller.relatorioCsv);
+router.get("/exportar-excel", controller.relatorioExcel);
 
 module.exports = router;

@@ -2,6 +2,9 @@
 
 const service = require("../services/movimentacao.service");
 const { paraCsv } = require("../utils/csv");
+const { gerarExcelMovimentacoes } = require("../utils/excel");
+
+const TITULOS_POR_TIPO = { receita: "Receitas", despesa: "Despesas", null: "Movimentações" };
 
 const COLUNAS_CSV = [
   { chave: "data", rotulo: "Data" },
@@ -55,6 +58,18 @@ function build(tipoFixo) {
         res.setHeader("Content-Type", "text/csv; charset=utf-8");
         res.setHeader("Content-Disposition", `attachment; filename="movimentacoes.csv"`);
         res.send(csv);
+      } catch (err) {
+        next(err);
+      }
+    },
+    async exportarExcel(req, res, next) {
+      try {
+        const itens = await service.listar(req.usuarioId, req.query, { tipoFixo });
+        const titulo = TITULOS_POR_TIPO[tipoFixo] || TITULOS_POR_TIPO.null;
+        const buffer = await gerarExcelMovimentacoes(itens, titulo);
+        res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        res.setHeader("Content-Disposition", `attachment; filename="${titulo.toLowerCase()}.xlsx"`);
+        res.send(buffer);
       } catch (err) {
         next(err);
       }

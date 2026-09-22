@@ -38,7 +38,10 @@ Sem Supabase: toda comunicação entre o frontend e o banco passa pela API do ba
 - **Metas financeiras**: valor objetivo, valor já guardado, prazo opcional, barra de progresso
   (nunca passa de 100%, mesmo ultrapassando o objetivo).
 - **Relatórios**: totais, saldo e categoria com maior gasto num período escolhido; exportação
-  em CSV ou PDF (via impressão do navegador).
+  em CSV, PDF (via impressão do navegador) ou **Excel completo** (.xlsx de verdade, com
+  formatação e várias abas: Resumo, Movimentações, Despesas por categoria, Metas e
+  Orçamentos - tudo organizado automaticamente, sem precisar montar planilha na mão).
+  Movimentações/receitas/despesas também exportam direto pra Excel.
 - **PWA instalável**: em Android, iPhone/iPad, Windows e Mac. Botão "Instalar agora" quando o
   navegador oferece o instalador nativo, e passo a passo manual pra cada plataforma (inclui
   iPhone/iPad no Safari, que não tem instalador automático) - aparece no login, no cadastro e
@@ -95,7 +98,7 @@ MeuBolsoDigital/
 │   │   ├── app.js             monta o Express (usado pelos testes, sem abrir porta)
 │   │   ├── config.js          lê e valida as variáveis de ambiente
 │   │   └── server.js          ponto de entrada (sobe o servidor de verdade)
-│   ├── tests/                 Jest + Supertest (95 testes)
+│   ├── tests/                 Jest + Supertest (97 testes)
 │   ├── .env.example
 │   └── package.json
 ├── database/migrations/      SQL versionado (001_init.sql: usuários/categorias/movimentações/
@@ -118,13 +121,13 @@ Tudo debaixo de `/api`, autenticado com `Authorization: Bearer <token>` (exceto 
 | Auth | `POST /auth/register`, `POST /auth/login` *(sem token)*, `GET /auth/me`, `POST /auth/logout` |
 | Perfil | `PUT /users/me`, `PUT /users/senha` |
 | Categorias | `GET/POST /categorias`, `PUT/DELETE /categorias/:id` |
-| Movimentações | `GET/POST /movimentacoes`, `PUT/DELETE /movimentacoes/:id`, `GET /movimentacoes/exportar` (CSV) |
+| Movimentações | `GET/POST /movimentacoes`, `PUT/DELETE /movimentacoes/:id`, `GET /movimentacoes/exportar` (CSV), `GET /movimentacoes/exportar-excel` (.xlsx) |
 | Receitas / Despesas | iguais a movimentações, em `/receitas` e `/despesas` (tipo já vem fixo) |
 | Recorrências | `GET/POST /recorrencias`, `PUT/DELETE /recorrencias/:id` |
 | Orçamentos | `GET/POST /orcamentos`, `PUT/DELETE /orcamentos/:id` |
 | Metas | `GET/POST /metas`, `PUT/DELETE /metas/:id` |
 | Dashboard | `GET /dashboard/resumo`, `GET /dashboard/graficos` |
-| Relatórios | `GET /relatorios`, `GET /relatorios/exportar` (CSV) |
+| Relatórios | `GET /relatorios`, `GET /relatorios/exportar` (CSV), `GET /relatorios/exportar-excel` (.xlsx completo, várias abas) |
 | Saúde | `GET /health` *(sem token)* |
 
 ## Como rodar localmente

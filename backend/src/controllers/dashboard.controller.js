@@ -1,7 +1,11 @@
 "use strict";
 
 const service = require("../services/dashboard.service");
+const movimentacaoService = require("../services/movimentacao.service");
+const metaService = require("../services/meta.service");
+const orcamentoService = require("../services/orcamento.service");
 const { paraCsv } = require("../utils/csv");
+const { gerarExcelRelatorioCompleto } = require("../utils/excel");
 
 const COLUNAS_RELATORIO_CSV = [
   { chave: "categoria", rotulo: "Categoria" },
@@ -45,4 +49,30 @@ async function relatorioCsv(req, res, next) {
   }
 }
 
-module.exports = { resumo, graficos, relatorio, relatorioCsv };
+/** Excel completo do relatorio: Resumo + Movimentacoes do periodo + Despesas por categoria +
+ * Metas + Orcamentos, tudo organizado em abas separadas automaticamente. */
+async function relatorioExcel(req, res, next) {
+  try {
+    const [resumo, movimentacoes, metas, orcamentos] = await Promise.all([
+      service.relatorio(req.usuarioId, req.query),
+      movimentacaoService.listar(req.usuarioId, req.query, {}),
+      metaService.listar(req.usuarioId),
+      orcamentoService.listar(req.usuarioId),
+    ]);
+    const buffer = await gerarExcelRelatorioCompleto({
+      periodo: resumo.periodo,
+      resumo,
+      movimentacoes,
+      despesasPorCategoria: resumo.despesasPorCategoria,
+      metas,
+      orcamentos,
+    });
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename="relatorio-meu-bolso-digital.xlsx"`);
+    res.send(buffer);
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { resumo, graficos, relatorio, relatorioCsv, relatorioExcel };

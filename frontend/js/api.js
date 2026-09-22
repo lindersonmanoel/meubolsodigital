@@ -103,7 +103,9 @@ const Api = (function () {
     // Exportação (baixa o arquivo direto, autenticando via token na URL nao e' preciso pq
     // usamos <a download> com blob - ver urlExportar)
     urlExportarMovimentacoes: (base, filtros) => `${window.API_BASE_URL}/${base}/exportar${montarQuery(filtros)}`,
+    urlExportarMovimentacoesExcel: (base, filtros) => `${window.API_BASE_URL}/${base}/exportar-excel${montarQuery(filtros)}`,
     urlExportarRelatorio: (filtros) => `${window.API_BASE_URL}/relatorios/exportar${montarQuery(filtros)}`,
+    urlExportarRelatorioExcel: (filtros) => `${window.API_BASE_URL}/relatorios/exportar-excel${montarQuery(filtros)}`,
     async baixarCsv(url, nomeArquivo) {
       const token = tokenAtual();
       const res = await fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} });

@@ -40,6 +40,7 @@
       </div>
       <button type="submit" class="btn btn-primario" style="width:auto;padding:10px 16px">Gerar relatório</button>
       <button type="button" class="btn btn-secundario" id="btn-exportar-csv" style="width:auto;padding:10px 16px">Exportar CSV</button>
+      <button type="button" class="btn btn-secundario" id="btn-exportar-excel" style="width:auto;padding:10px 16px">Exportar Excel completo</button>
       <button type="button" class="btn btn-secundario" id="btn-exportar-pdf" style="width:auto;padding:10px 16px">Exportar PDF</button>
     </form>
 
@@ -156,6 +157,21 @@
         await Api.baixarCsv(Api.urlExportarRelatorio(filtros), "relatorio.csv");
       } catch (err) {
         mostrarErro(erroGeral, err.message);
+      }
+    });
+
+    // Excel completo: uma planilha .xlsx com abas separadas (Resumo, Movimentações do
+    // período, Despesas por categoria, Metas e Orçamentos) - tudo organizado automaticamente.
+    document.getElementById("btn-exportar-excel").addEventListener("click", async (e) => {
+      const btn = e.currentTarget;
+      btn.disabled = true;
+      try {
+        const filtros = { inicio: document.getElementById("inicio").value || undefined, fim: document.getElementById("fim").value || undefined };
+        await Api.baixarCsv(Api.urlExportarRelatorioExcel(filtros), "relatorio-meu-bolso-digital.xlsx");
+      } catch (err) {
+        mostrarErro(erroGeral, err.message);
+      } finally {
+        btn.disabled = false;
       }
     });
 

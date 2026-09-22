@@ -147,6 +147,15 @@ describe("movimentacoes", () => {
       expect(despesas.body.movimentacoes.length).toBe(3);
     });
 
+    test("exporta em Excel (.xlsx)", async () => {
+      const { headers } = await criarUsuarioAutenticado(app);
+      await popular(headers);
+      const res = await request(app).get("/api/movimentacoes/exportar-excel").set(headers);
+      expect(res.status).toBe(200);
+      expect(res.headers["content-type"]).toBe("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      expect(res.headers["content-disposition"]).toContain(".xlsx");
+    });
+
     test("POST /api/receitas força o tipo, mesmo se o corpo mandar outro", async () => {
       const { headers } = await criarUsuarioAutenticado(app);
       const res = await request(app).post("/api/receitas").set(headers).send({

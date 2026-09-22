@@ -13,6 +13,7 @@ function buildRouter(tipoFixo) {
   router.use(requireAuth);
   router.get("/", controller.listar);
   router.get("/exportar", controller.exportarCsv);
+  router.get("/exportar-excel", controller.exportarExcel);
   router.post("/", controller.criar);
   router.put("/:id", validarIdNaRota, controller.atualizar);
   router.delete("/:id", validarIdNaRota, controller.remover);
