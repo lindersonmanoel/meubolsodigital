@@ -362,11 +362,13 @@
       try {
         const dados = JSON.parse(textoBackupEscolhido);
         const { resultado } = await Api.restaurarBackup(dados);
-        mostrarErro(
-          sucessoBackup,
+        let mensagem =
           `Backup restaurado: ${resultado.categorias} categorias, ${resultado.movimentacoes} movimentações, ` +
-            `${resultado.metas} metas, ${resultado.orcamentos} orçamentos e ${resultado.recorrencias} recorrências.`
-        );
+          `${resultado.metas} metas, ${resultado.orcamentos} orçamentos e ${resultado.recorrencias} recorrências.`;
+        if (resultado.avisos && resultado.avisos.length) {
+          mensagem += ` ${resultado.avisos.length} item(ns) não importado(s): ${resultado.avisos.slice(0, 5).join("; ")}${resultado.avisos.length > 5 ? "..." : ""}`;
+        }
+        mostrarErro(sucessoBackup, mensagem);
         inputRestaurar.value = "";
         textoBackupEscolhido = null;
       } catch (err) {

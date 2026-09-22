@@ -79,6 +79,15 @@ describe("backup", () => {
     expect(res.status).toBe(422);
   });
 
+  test("rejeita backup com campos que deveriam ser lista mas nao sao (arquivo corrompido)", async () => {
+    const { headers } = await criarUsuarioAutenticado(app);
+    const res = await request(app)
+      .post("/api/backup/restaurar")
+      .set(headers)
+      .send({ versao: 1, categorias: [], movimentacoes: { isso: "deveria ser uma lista" } });
+    expect(res.status).toBe(422);
+  });
+
   test("exige autenticação", async () => {
     expect((await request(app).get("/api/backup")).status).toBe(401);
     expect((await request(app).post("/api/backup/restaurar").send({})).status).toBe(401);

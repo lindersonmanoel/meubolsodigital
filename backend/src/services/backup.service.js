@@ -74,6 +74,14 @@ async function restaurarTudo(usuarioId, backup) {
   if (!backup || typeof backup !== "object" || !Array.isArray(backup.categorias)) {
     throw new AppError("Esse arquivo não parece ser um backup válido do Meu Bolso Digital.", 422);
   }
+  // Confere os outros campos tambem antes de iterar - um arquivo editado/corrompido a mao
+  // (ex.: "movimentacoes": {} em vez de uma lista) nao pode virar erro 500.
+  const CAMPOS_LISTA = ["movimentacoes", "metas", "orcamentos", "recorrencias"];
+  for (const campo of CAMPOS_LISTA) {
+    if (backup[campo] != null && !Array.isArray(backup[campo])) {
+      throw new AppError(`O campo "${campo}" do backup precisa ser uma lista.`, 422);
+    }
+  }
 
   const resultado = {
     categorias: 0,
