@@ -1,0 +1,24 @@
+services:
+  # Banco PostgreSQL para desenvolvimento e testes locais. O backend roda fora do Docker
+  # (npm run dev) e se conecta aqui pela porta publicada. Em produção, use um PostgreSQL
+  # gerenciado (Neon, Railway, RDS, etc.) e aponte DATABASE_URL pra ele.
+  postgres:
+    image: postgres:16-alpine
+    container_name: meu-bolso-digital-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mbd
+      POSTGRES_PASSWORD: mbd_local_dev
+      POSTGRES_DB: meu_bolso_digital
+    ports:
+      - "127.0.0.1:55432:5432"
+    volumes:
+      - mbd_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mbd"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mbd_pgdata:

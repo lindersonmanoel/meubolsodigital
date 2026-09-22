@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configurações | Meu Bolso Digital</title>
+<link rel="icon" href="assets/images/logo.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d3b66">
+<link rel="stylesheet" href="css/global.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/shell.css">
+<link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+  <template id="conteudo-pagina">
+    <div class="barra-topo-pagina">
+      <div>
+        <h1>Configurações</h1>
+        <p class="hint">Seus dados e sua senha.</p>
+      </div>
+    </div>
+
+    <section class="card" style="margin-bottom:20px;max-width:520px">
+      <h2>Meu perfil</h2>
+      <p class="alerta alerta-erro" id="erro-perfil" hidden></p>
+      <p class="alerta alerta-sucesso" id="sucesso-perfil" hidden></p>
+      <form id="form-perfil" novalidate>
+        <div class="campo">
+          <label for="nome">Nome</label>
+          <input type="text" id="nome" maxlength="120" required>
+          <p class="erro-campo" data-campo="nome" hidden></p>
+        </div>
+        <div class="campo">
+          <label for="email">E-mail</label>
+          <input type="email" id="email" maxlength="160" required>
+          <p class="erro-campo" data-campo="email" hidden></p>
+        </div>
+        <button type="submit" class="btn btn-primario" id="btn-salvar-perfil" style="width:auto;padding:10px 20px">Salvar alterações</button>
+      </form>
+    </section>
+
+    <section class="card" style="margin-bottom:20px;max-width:520px">
+      <h2>Trocar senha</h2>
+      <p class="alerta alerta-erro" id="erro-senha" hidden></p>
+      <p class="alerta alerta-sucesso" id="sucesso-senha" hidden></p>
+      <form id="form-senha" novalidate>
+        <div class="campo">
+          <label for="senhaAtual">Senha atual</label>
+          <input type="password" id="senhaAtual" autocomplete="current-password" required>
+          <p class="erro-campo" data-campo="senhaAtual" hidden></p>
+        </div>
+        <div class="campo">
+          <label for="novaSenha">Nova senha</label>
+          <input type="password" id="novaSenha" autocomplete="new-password" minlength="8" required>
+          <p class="erro-campo" data-campo="novaSenha" hidden></p>
+        </div>
+        <div class="campo">
+          <label for="confirmarNovaSenha">Confirmar nova senha</label>
+          <input type="password" id="confirmarNovaSenha" autocomplete="new-password" minlength="8" required>
+          <p class="erro-campo" data-campo="confirmarNovaSenha" hidden></p>
+        </div>
+        <button type="submit" class="btn btn-primario" id="btn-trocar-senha" style="width:auto;padding:10px 20px">Trocar senha</button>
+      </form>
+    </section>
+
+    <section class="card" style="max-width:520px">
+      <h2>Sair da conta</h2>
+      <p class="hint">Encerra sua sessão neste dispositivo.</p>
+      <button type="button" class="btn btn-secundario" id="btn-sair-conta" style="width:auto;padding:10px 20px">Sair</button>
+    </section>
+  </template>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/shell.js"></script>
+  <script src="js/pwa.js"></script>
+  <script>
+    Sessao.exigirLogin();
+    montarShell("configuracoes");
+
+    const formPerfil = document.getElementById("form-perfil");
+    const erroPerfil = document.getElementById("erro-perfil");
+    const sucessoPerfil = document.getElementById("sucesso-perfil");
+
+    async function carregarPerfil() {
+      try {
+        const { usuario } = await Api.me();
+        document.getElementById("nome").value = usuario.nome;
+        document.getElementById("email").value = usuario.email;
+      } catch (err) {
+        if (err.status === 401) {
+          Sessao.encerrar();
+          window.location.href = "login.html";
+        }
+      }
+    }
+    carregarPerfil();
+
+    formPerfil.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      mostrarErro(erroPerfil, "");
+      mostrarErro(sucessoPerfil, "");
+      limparErrosCampos(formPerfil);
+      const btn = document.getElementById("btn-salvar-perfil");
+      btn.disabled = true;
+      try {
+        const { usuario } = await Api.atualizarPerfil({
+          nome: document.getElementById("nome").value.trim(),
+          email: document.getElementById("email").value.trim(),
+        });
+        const cache = Sessao.usuario();
+        Sessao.salvar(localStorage.getItem("mbd_token"), { ...cache, ...usuario });
+        mostrarErro(sucessoPerfil, "Perfil atualizado com sucesso.");
+        document.getElementById("saudacao").textContent = usuario.email;
+      } catch (err) {
+        if (err.status === 422 || err.status === 409) mostrarErrosCampos(formPerfil, err.body.campos || { email: err.message });
+        else mostrarErro(erroPerfil, err.message);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    const formSenha = document.getElementById("form-senha");
+    const erroSenha = document.getElementById("erro-senha");
+    const sucessoSenha = document.getElementById("sucesso-senha");
+
+    formSenha.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      mostrarErro(erroSenha, "");
+      mostrarErro(sucessoSenha, "");
+      limparErrosCampos(formSenha);
+      const btn = document.getElementById("btn-trocar-senha");
+      btn.disabled = true;
+      try {
+        await Api.trocarSenha({
+          senhaAtual: document.getElementById("senhaAtual").value,
+          novaSenha: document.getElementById("novaSenha").value,
+          confirmarNovaSenha: document.getElementById("confirmarNovaSenha").value,
+        });
+        formSenha.reset();
+        mostrarErro(sucessoSenha, "Senha alterada com sucesso.");
+      } catch (err) {
+        if (err.status === 422) mostrarErrosCampos(formSenha, err.body.campos);
+        else if (err.status === 401) mostrarErrosCampos(formSenha, { senhaAtual: err.message });
+        else mostrarErro(erroSenha, err.message);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    document.getElementById("btn-sair-conta").addEventListener("click", async () => {
+      try { await Api.logout(); } catch (e) { /* mesmo se falhar, encerra localmente */ }
+      Sessao.encerrar();
+      window.location.href = "login.html";
+    });
+  </script>
+</body>
+</html>

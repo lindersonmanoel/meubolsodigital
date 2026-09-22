@@ -1,0 +1,29 @@
+@media (max-width: 480px) {
+  .card { padding: 18px; border-radius: 12px; }
+  .auth-logo img { width: 72px; height: 72px; }
+  .app-topbar { padding: 10px 14px; }
+  .app-conteudo { padding: 18px 12px; }
+}
+
+/* Sidebar vira menu deslizante em telas estreitas. */
+@media (max-width: 860px) {
+  .app-sidebar {
+    transform: translateX(-100%);
+  }
+  .app-sidebar.aberta {
+    transform: translateX(0);
+  }
+  .app-main {
+    margin-left: 0;
+  }
+  .app-menu-btn {
+    display: inline-flex;
+  }
+}
+
+@media (max-width: 600px) {
+  .grade-cartoes { grid-template-columns: 1fr 1fr; }
+  table.tabela th, table.tabela td { padding: 10px 10px; font-size: 0.82rem; }
+  .tabela-caixa { overflow-x: auto; }
+  table.tabela { min-width: 560px; }
+}

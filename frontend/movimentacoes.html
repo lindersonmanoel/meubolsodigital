@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Movimentações | Meu Bolso Digital</title>
+<link rel="icon" href="assets/images/logo.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d3b66">
+<link rel="stylesheet" href="css/global.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/shell.css">
+<link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+  <template id="conteudo-pagina">
+    <div class="barra-topo-pagina">
+      <div>
+        <h1>Movimentações</h1>
+        <p class="hint">Todas as suas receitas e despesas, em um só lugar.</p>
+      </div>
+      <button type="button" class="btn btn-primario" id="btn-nova" style="width:auto;padding:10px 18px">+ Nova movimentação</button>
+    </div>
+
+    <p class="alerta alerta-erro" id="erro-geral" hidden></p>
+
+    <section class="painel-formulario" id="painel-formulario" hidden>
+      <h2 id="titulo-formulario">Nova movimentação</h2>
+      <form id="form-movimentacao" novalidate>
+        <input type="hidden" id="movimentacao-id">
+        <div class="linha-campos">
+          <div class="campo" id="campo-tipo">
+            <label for="tipo">Tipo</label>
+            <select id="tipo">
+              <option value="despesa">Despesa</option>
+              <option value="receita">Receita</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label for="descricao">Descrição</label>
+            <input type="text" id="descricao" maxlength="160" required>
+            <p class="erro-campo" data-campo="descricao" hidden></p>
+          </div>
+          <div class="campo">
+            <label for="valor">Valor (R$)</label>
+            <input type="number" id="valor" step="0.01" min="0.01" required>
+            <p class="erro-campo" data-campo="valor" hidden></p>
+          </div>
+          <div class="campo">
+            <label for="data">Data</label>
+            <input type="date" id="data" required>
+            <p class="erro-campo" data-campo="data" hidden></p>
+          </div>
+          <div class="campo">
+            <label for="categoriaId">Categoria</label>
+            <select id="categoriaId"></select>
+            <p class="erro-campo" data-campo="categoriaId" hidden></p>
+          </div>
+        </div>
+        <div class="campo">
+          <label for="observacao">Observação (opcional)</label>
+          <textarea id="observacao" rows="2" maxlength="2000"></textarea>
+        </div>
+        <div class="acoes-formulario">
+          <button type="submit" class="btn btn-primario" id="btn-salvar">Salvar</button>
+          <button type="button" class="btn btn-secundario" id="btn-cancelar">Cancelar</button>
+        </div>
+      </form>
+    </section>
+
+    <form class="filtros" id="form-filtros">
+      <div class="campo">
+        <label for="filtro-tipo">Tipo</label>
+        <select id="filtro-tipo">
+          <option value="">Todos</option>
+          <option value="receita">Receita</option>
+          <option value="despesa">Despesa</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label for="filtro-categoria">Categoria</label>
+        <select id="filtro-categoria"><option value="">Todas as categorias</option></select>
+      </div>
+      <div class="campo">
+        <label for="filtro-inicio">De</label>
+        <input type="date" id="filtro-inicio">
+      </div>
+      <div class="campo">
+        <label for="filtro-fim">Até</label>
+        <input type="date" id="filtro-fim">
+      </div>
+      <div class="campo">
+        <label for="filtro-busca">Buscar</label>
+        <input type="text" id="filtro-busca" placeholder="Descrição...">
+      </div>
+      <button type="submit" class="btn btn-primario" style="width:auto;padding:10px 16px">Filtrar</button>
+      <button type="button" class="btn btn-secundario" id="btn-limpar-filtros" style="width:auto;padding:10px 16px">Limpar</button>
+    </form>
+
+    <div class="tabela-caixa">
+      <table class="tabela">
+        <thead>
+          <tr><th>Data</th><th>Descrição</th><th>Categoria</th><th class="coluna-tipo">Tipo</th><th>Valor</th><th></th></tr>
+        </thead>
+        <tbody id="corpo-tabela"></tbody>
+      </table>
+      <p class="vazio" id="lista-vazia" hidden>Nenhuma movimentação encontrada.</p>
+      <p class="spinner-carregando" id="carregando">Carregando...</p>
+    </div>
+  </template>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/shell.js"></script>
+  <script src="js/pwa.js"></script>
+  <script src="js/movimentacoes.js"></script>
+  <script>
+    Sessao.exigirLogin();
+    montarShell("movimentacoes");
+    iniciarPaginaMovimentacoes({ base: "movimentacoes", tipoFixo: null });
+  </script>
+</body>
+</html>

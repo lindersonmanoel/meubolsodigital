@@ -1,0 +1,55 @@
+/* Telas de autenticacao (login/cadastro): card central com a logo. */
+.tela-auth {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.auth-caixa {
+  width: 100%;
+  max-width: 420px;
+}
+
+.auth-logo {
+  text-align: center;
+  margin-bottom: 20px;
+}
+.auth-logo img {
+  width: 88px;
+  height: 88px;
+}
+
+.auth-rodape {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 0.9rem;
+}
+
+/* App logado: cabecalho fixo + conteudo. O menu lateral completo entra na Fase 4
+   (dashboard de verdade); por enquanto o cabecalho simples ja cobre a navegacao minima. */
+.app-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--borda);
+}
+.app-topbar .marca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  color: var(--azul-escuro);
+}
+.app-topbar .marca img {
+  width: 32px;
+  height: 32px;
+}
+.app-conteudo {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}

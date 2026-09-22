@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meu Bolso Digital</title>
+<link rel="icon" href="assets/images/logo.png">
+</head>
+<body>
+  <script src="js/auth.js"></script>
+  <script>
+    // Porta de entrada do site: manda pra onde a pessoa deve estar, sem mostrar nada.
+    window.location.replace(Sessao.estaLogado() ? "dashboard.html" : "login.html");
+  </script>
+  <noscript>
+    <p>Ative o JavaScript para usar o Meu Bolso Digital, ou acesse <a href="login.html">a tela de login</a> diretamente.</p>
+  </noscript>
+</body>
+</html>

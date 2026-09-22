@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Criar conta | Meu Bolso Digital</title>
+<link rel="icon" href="assets/images/logo.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d3b66">
+<link rel="stylesheet" href="css/global.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+  <main class="tela-auth">
+    <div class="auth-caixa">
+      <div class="auth-logo">
+        <img src="assets/images/logo.png" alt="Meu Bolso Digital">
+      </div>
+      <section class="card">
+        <h1>Criar conta</h1>
+        <p class="hint">Leva menos de um minuto.</p>
+
+        <p class="alerta alerta-erro" id="erro-geral" hidden></p>
+        <p class="alerta alerta-sucesso" id="sucesso-geral" hidden></p>
+
+        <form id="form-cadastro" novalidate>
+          <div class="campo">
+            <label for="nome">Nome completo</label>
+            <input type="text" id="nome" name="nome" autocomplete="name" required maxlength="120">
+            <p class="erro-campo" data-campo="nome" hidden></p>
+          </div>
+          <div class="campo">
+            <label for="email">E-mail</label>
+            <input type="email" id="email" name="email" autocomplete="email" required maxlength="160">
+            <p class="erro-campo" data-campo="email" hidden></p>
+          </div>
+          <div class="campo">
+            <label for="senha">Senha</label>
+            <input type="password" id="senha" name="senha" autocomplete="new-password" required minlength="8" maxlength="200">
+            <p class="hint">Pelo menos 8 caracteres.</p>
+            <p class="erro-campo" data-campo="senha" hidden></p>
+          </div>
+          <div class="campo">
+            <label for="confirmarSenha">Confirmar senha</label>
+            <input type="password" id="confirmarSenha" name="confirmarSenha" autocomplete="new-password" required maxlength="200">
+            <p class="erro-campo" data-campo="confirmarSenha" hidden></p>
+          </div>
+          <button type="submit" class="btn btn-primario" id="btn-criar">Criar conta</button>
+        </form>
+      </section>
+      <p class="auth-rodape">Já tem conta? <a href="login.html">Entrar</a></p>
+    </div>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/pwa.js"></script>
+  <script>
+    Sessao.redirecionarSeLogado();
+
+    const form = document.getElementById("form-cadastro");
+    const erroGeral = document.getElementById("erro-geral");
+    const sucessoGeral = document.getElementById("sucesso-geral");
+    const btn = document.getElementById("btn-criar");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      mostrarErro(erroGeral, "");
+      mostrarErro(sucessoGeral, "");
+      limparErrosCampos(form);
+      btn.disabled = true;
+      btn.textContent = "Criando...";
+      try {
+        await Api.registrar({
+          nome: document.getElementById("nome").value.trim(),
+          email: document.getElementById("email").value.trim(),
+          senha: document.getElementById("senha").value,
+          confirmarSenha: document.getElementById("confirmarSenha").value,
+        });
+        mostrarErro(sucessoGeral, "Conta criada com sucesso! Redirecionando para o login...");
+        setTimeout(() => { window.location.href = "login.html"; }, 1500);
+      } catch (err) {
+        if (err.status === 422 || err.status === 409) mostrarErrosCampos(form, err.body.campos);
+        if (!(err.status === 422 || err.status === 409) || !err.body.campos) mostrarErro(erroGeral, err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Criar conta";
+      }
+    });
+  </script>
+</body>
+</html>

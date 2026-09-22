@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard | Meu Bolso Digital</title>
+<link rel="icon" href="assets/images/logo.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d3b66">
+<link rel="stylesheet" href="css/global.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/shell.css">
+<link rel="stylesheet" href="css/responsive.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <template id="conteudo-pagina">
+    <div class="barra-topo-pagina">
+      <div>
+        <h1>Olá, <span id="nome-usuario">...</span>!</h1>
+        <p class="hint">Aqui está um resumo das suas finanças.</p>
+      </div>
+    </div>
+
+    <p class="alerta alerta-erro" id="erro-geral" hidden></p>
+
+    <section class="grade-cartoes">
+      <div class="cartao-metrica">
+        <div class="rotulo">Saldo atual</div>
+        <div class="valor" id="cartao-saldo">R$ 0,00</div>
+      </div>
+      <div class="cartao-metrica">
+        <div class="rotulo">Receitas do mês</div>
+        <div class="valor receita" id="cartao-receitas">R$ 0,00</div>
+      </div>
+      <div class="cartao-metrica">
+        <div class="rotulo">Despesas do mês</div>
+        <div class="valor despesa" id="cartao-despesas">R$ 0,00</div>
+      </div>
+      <div class="cartao-metrica">
+        <div class="rotulo">Resultado do mês</div>
+        <div class="valor" id="cartao-resultado">R$ 0,00</div>
+      </div>
+    </section>
+
+    <section class="grafico-caixa">
+      <h2>Receitas x despesas (últimos 6 meses)</h2>
+      <canvas id="grafico-meses" role="img" aria-label="Gráfico de receitas e despesas por mês"></canvas>
+    </section>
+
+    <section class="grafico-caixa">
+      <h2>Despesas por categoria (mês atual)</h2>
+      <canvas id="grafico-categorias" role="img" aria-label="Gráfico de despesas por categoria"></canvas>
+      <p class="vazio" id="sem-despesas-categoria" hidden>Nenhuma despesa registrada neste mês ainda.</p>
+    </section>
+  </template>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/shell.js"></script>
+  <script src="js/pwa.js"></script>
+  <script>
+    Sessao.exigirLogin();
+    montarShell("dashboard");
+
+    const cache = Sessao.usuario();
+    if (cache) document.getElementById("nome-usuario").textContent = cache.nome;
+
+    const erroGeral = document.getElementById("erro-geral");
+    const CORES_CATEGORIAS = ["#0d3b66", "#1fa974", "#dc2626", "#f59e0b", "#7c3aed", "#0891b2", "#be185d", "#65a30d"];
+
+    async function carregar() {
+      try {
+        const [resumo, graficos, perfil] = await Promise.all([
+          Api.resumoDashboard(),
+          Api.graficosDashboard(6),
+          Api.me(),
+        ]);
+
+        document.getElementById("nome-usuario").textContent = perfil.usuario.nome;
+
+        document.getElementById("cartao-saldo").textContent = formatarMoeda(resumo.saldoAtual);
+        document.getElementById("cartao-receitas").textContent = formatarMoeda(resumo.receitasDoMes);
+        document.getElementById("cartao-despesas").textContent = formatarMoeda(resumo.despesasDoMes);
+        const resultado = document.getElementById("cartao-resultado");
+        resultado.textContent = formatarMoeda(resumo.resultadoDoMes);
+        resultado.classList.add(resumo.resultadoDoMes >= 0 ? "receita" : "despesa");
+
+        const rotulos = graficos.porMes.map((m) => {
+          const [ano, mes] = m.mes.split("-");
+          return `${mes}/${ano.slice(2)}`;
+        });
+        new Chart(document.getElementById("grafico-meses"), {
+          type: "bar",
+          data: {
+            labels: rotulos,
+            datasets: [
+              { label: "Receitas", data: graficos.porMes.map((m) => m.receitas), backgroundColor: "#1fa974" },
+              { label: "Despesas", data: graficos.porMes.map((m) => m.despesas), backgroundColor: "#dc2626" },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { position: "bottom" } },
+            scales: { y: { beginAtZero: true } },
+          },
+        });
+
+        if (graficos.despesasPorCategoriaNoMes.length) {
+          new Chart(document.getElementById("grafico-categorias"), {
+            type: "doughnut",
+            data: {
+              labels: graficos.despesasPorCategoriaNoMes.map((c) => c.categoria),
+              datasets: [
+                {
+                  data: graficos.despesasPorCategoriaNoMes.map((c) => c.total),
+                  backgroundColor: CORES_CATEGORIAS,
+                },
+              ],
+            },
+            options: { responsive: true, plugins: { legend: { position: "bottom" } } },
+          });
+        } else {
+          document.getElementById("sem-despesas-categoria").hidden = false;
+        }
+      } catch (err) {
+        if (err.status === 401) {
+          Sessao.encerrar();
+          window.location.href = "login.html";
+        } else {
+          mostrarErro(erroGeral, err.message);
+        }
+      }
+    }
+
+    carregar();
+  </script>
+</body>
+</html>

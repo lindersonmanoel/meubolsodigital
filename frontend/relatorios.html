@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relatórios | Meu Bolso Digital</title>
+<link rel="icon" href="assets/images/logo.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d3b66">
+<link rel="stylesheet" href="css/global.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/shell.css">
+<link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+  <template id="conteudo-pagina">
+    <div class="barra-topo-pagina">
+      <div>
+        <h1>Relatórios</h1>
+        <p class="hint">Escolha um período e veja o resumo das suas finanças.</p>
+      </div>
+    </div>
+
+    <p class="alerta alerta-erro" id="erro-geral" hidden></p>
+
+    <form class="filtros" id="form-periodo">
+      <div class="campo">
+        <label for="inicio">De</label>
+        <input type="date" id="inicio">
+      </div>
+      <div class="campo">
+        <label for="fim">Até</label>
+        <input type="date" id="fim">
+      </div>
+      <button type="submit" class="btn btn-primario" style="width:auto;padding:10px 16px">Gerar relatório</button>
+    </form>
+
+    <section class="grade-cartoes">
+      <div class="cartao-metrica">
+        <div class="rotulo">Total de receitas</div>
+        <div class="valor receita" id="cartao-receitas">R$ 0,00</div>
+      </div>
+      <div class="cartao-metrica">
+        <div class="rotulo">Total de despesas</div>
+        <div class="valor despesa" id="cartao-despesas">R$ 0,00</div>
+      </div>
+      <div class="cartao-metrica">
+        <div class="rotulo">Saldo no período</div>
+        <div class="valor" id="cartao-saldo-periodo">R$ 0,00</div>
+      </div>
+      <div class="cartao-metrica">
+        <div class="rotulo">Movimentações</div>
+        <div class="valor" id="cartao-quantidade">0</div>
+      </div>
+    </section>
+
+    <section class="card" id="cartao-maior-gasto" style="margin-bottom:20px" hidden>
+      <h2>Categoria com maior gasto</h2>
+      <p class="hint" style="font-size:1rem"><strong id="nome-maior-gasto"></strong> — <span id="valor-maior-gasto"></span></p>
+    </section>
+
+    <div class="tabela-caixa">
+      <table class="tabela">
+        <thead><tr><th>Categoria</th><th>Total de despesas</th></tr></thead>
+        <tbody id="corpo-tabela"></tbody>
+      </table>
+      <p class="vazio" id="lista-vazia" hidden>Nenhuma despesa no período selecionado.</p>
+      <p class="spinner-carregando" id="carregando">Carregando...</p>
+    </div>
+  </template>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/shell.js"></script>
+  <script src="js/pwa.js"></script>
+  <script>
+    Sessao.exigirLogin();
+    montarShell("relatorios");
+
+    const erroGeral = document.getElementById("erro-geral");
+    const corpoTabela = document.getElementById("corpo-tabela");
+    const listaVazia = document.getElementById("lista-vazia");
+    const carregando = document.getElementById("carregando");
+
+    function escaparHtml(texto) {
+      const div = document.createElement("div");
+      div.textContent = texto;
+      return div.innerHTML;
+    }
+
+    async function gerarRelatorio() {
+      mostrarErro(erroGeral, "");
+      carregando.hidden = false;
+      try {
+        const filtros = {
+          inicio: document.getElementById("inicio").value || undefined,
+          fim: document.getElementById("fim").value || undefined,
+        };
+        const r = await Api.relatorio(filtros);
+
+        document.getElementById("cartao-receitas").textContent = formatarMoeda(r.totalReceitas);
+        document.getElementById("cartao-despesas").textContent = formatarMoeda(r.totalDespesas);
+        const saldo = document.getElementById("cartao-saldo-periodo");
+        saldo.textContent = formatarMoeda(r.saldoNoPeriodo);
+        saldo.classList.remove("receita", "despesa");
+        saldo.classList.add(r.saldoNoPeriodo >= 0 ? "receita" : "despesa");
+        document.getElementById("cartao-quantidade").textContent = r.quantidadeMovimentacoes;
+
+        const cartaoMaiorGasto = document.getElementById("cartao-maior-gasto");
+        if (r.categoriaComMaiorGasto) {
+          cartaoMaiorGasto.hidden = false;
+          document.getElementById("nome-maior-gasto").textContent = r.categoriaComMaiorGasto.categoria;
+          document.getElementById("valor-maior-gasto").textContent = formatarMoeda(r.categoriaComMaiorGasto.total);
+        } else {
+          cartaoMaiorGasto.hidden = true;
+        }
+
+        corpoTabela.innerHTML = "";
+        r.despesasPorCategoria.forEach((c) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${escaparHtml(c.categoria)}</td><td class="valor-despesa">${formatarMoeda(c.total)}</td>`;
+          corpoTabela.appendChild(tr);
+        });
+        listaVazia.hidden = r.despesasPorCategoria.length > 0;
+      } catch (err) {
+        if (err.status === 401) {
+          Sessao.encerrar();
+          window.location.href = "login.html";
+          return;
+        }
+        mostrarErro(erroGeral, err.message);
+      } finally {
+        carregando.hidden = true;
+      }
+    }
+
+    document.getElementById("form-periodo").addEventListener("submit", (e) => {
+      e.preventDefault();
+      gerarRelatorio();
+    });
+
+    // Vem carregado com o mes atual, pra ja mostrar algo de cara.
+    const hoje = new Date();
+    document.getElementById("inicio").value = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().slice(0, 10);
+    document.getElementById("fim").value = hoje.toISOString().slice(0, 10);
+    gerarRelatorio();
+  </script>
+</body>
+</html>

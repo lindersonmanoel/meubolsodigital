@@ -1,0 +1,16 @@
+# Segredos e configuracao local: NUNCA versionar
+.env
+.env.*
+!.env.example
+
+# Dependencias e caches
+node_modules/
+.pytest_cache/
+
+# Logs
+*.log
+logs/
+
+# Banco local (se algum dia rodar SQLite em dev)
+*.sqlite
+*.sqlite3
