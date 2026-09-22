@@ -19,8 +19,9 @@ Sem Supabase: toda comunicação entre o frontend e o banco passa pela API do ba
 
 ## Funcionalidades
 
-- **Conta e sessão**: cadastro, login com token JWT, sessão no navegador, trocar nome/e-mail
-  e trocar senha.
+- **Conta e sessão**: cadastro, login com token JWT, sessão no navegador, trocar nome/e-mail,
+  trocar senha, foto de perfil (recortada/redimensionada no navegador antes de enviar,
+  guardada como base64 no banco - sem serviço de armazenamento externo) e bio curta.
 - **Categorias**: criar, editar e excluir, separadas por tipo (receita/despesa). Não deixa
   duplicar nome+tipo, nem trocar o tipo de uma categoria que já tem movimentação, recorrência
   ou orçamento ligados a ela (evita dado inconsistente).
@@ -94,11 +95,12 @@ MeuBolsoDigital/
 │   │   ├── app.js             monta o Express (usado pelos testes, sem abrir porta)
 │   │   ├── config.js          lê e valida as variáveis de ambiente
 │   │   └── server.js          ponto de entrada (sobe o servidor de verdade)
-│   ├── tests/                 Jest + Supertest (89 testes)
+│   ├── tests/                 Jest + Supertest (95 testes)
 │   ├── .env.example
 │   └── package.json
 ├── database/migrations/      SQL versionado (001_init.sql: usuários/categorias/movimentações/
-│                              metas; 002_recorrencias_orcamentos.sql: recorrências e orçamentos)
+│                              metas; 002_recorrencias_orcamentos.sql: recorrências e
+│                              orçamentos; 003_perfil_foto_bio.sql: foto e bio do usuário)
 ├── docker-compose.yml         PostgreSQL local pra desenvolvimento/teste
 ├── Dockerfile                 imagem de produção do backend (usada pelo Railway hoje)
 ├── docker-compose.prod.yml    stack alternativa pra VM própria (Postgres + backend + Cloudflare Tunnel)

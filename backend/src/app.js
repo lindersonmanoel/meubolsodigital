@@ -57,7 +57,9 @@ function createApp() {
       allowedHeaders: ["Content-Type", "Authorization"],
     })
   );
-  app.use(express.json({ limit: "100kb" }));
+  // 1mb pra caber a foto de perfil em base64 (limitada a ~700kb na validacao do controller);
+  // as outras rotas continuam com corpos bem menores que isso na pratica.
+  app.use(express.json({ limit: "1mb" }));
   if (!config.isTest) {
     app.use(morgan(config.isProduction ? "combined" : "dev"));
   }

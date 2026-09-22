@@ -492,6 +492,23 @@ table.tabela tbody tr:hover { background: #f8fafc; }
   transform: translateY(0);
 }
 
+.perfil-foto-linha {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.perfil-avatar {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--bg);
+  border: 1px solid var(--borda);
+  flex-shrink: 0;
+}
+
 .spinner-carregando {
   text-align: center;
   padding: 24px;

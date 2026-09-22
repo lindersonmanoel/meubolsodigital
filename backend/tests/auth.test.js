@@ -156,6 +156,66 @@ describe("PUT /api/users/me", () => {
       .send({ nome: usuarioValido.nome, email: "outra@example.com" });
     expect(res.status).toBe(409);
   });
+
+  test("salva bio e foto de perfil (data URL)", async () => {
+    const token = await registrarELogar();
+    const fotoUrl = `data:image/jpeg;base64,${"A".repeat(100)}`;
+    const res = await request(app)
+      .put("/api/users/me")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ nome: usuarioValido.nome, email: usuarioValido.email, bio: "Adoro controlar as finanças.", fotoUrl });
+    expect(res.status).toBe(200);
+    expect(res.body.usuario.bio).toBe("Adoro controlar as finanças.");
+    expect(res.body.usuario.foto_url).toBe(fotoUrl);
+  });
+
+  test("mantém bio e foto quando o campo não é enviado", async () => {
+    const token = await registrarELogar();
+    const fotoUrl = `data:image/png;base64,${"B".repeat(100)}`;
+    await request(app)
+      .put("/api/users/me")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ nome: usuarioValido.nome, email: usuarioValido.email, bio: "Bio original", fotoUrl });
+
+    const res = await request(app)
+      .put("/api/users/me")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ nome: "Outro Nome", email: usuarioValido.email });
+    expect(res.status).toBe(200);
+    expect(res.body.usuario.nome).toBe("Outro Nome");
+    expect(res.body.usuario.bio).toBe("Bio original");
+    expect(res.body.usuario.foto_url).toBe(fotoUrl);
+  });
+
+  test("remove a foto quando fotoUrl vem vazio", async () => {
+    const token = await registrarELogar();
+    const fotoUrl = `data:image/png;base64,${"C".repeat(100)}`;
+    await request(app)
+      .put("/api/users/me")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ nome: usuarioValido.nome, email: usuarioValido.email, fotoUrl });
+
+    const res = await request(app)
+      .put("/api/users/me")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ nome: usuarioValido.nome, email: usuarioValido.email, fotoUrl: "" });
+    expect(res.status).toBe(200);
+    expect(res.body.usuario.foto_url).toBeNull();
+  });
+
+  test.each([
+    ["nao e' uma data URL de imagem", "http://exemplo.com/foto.jpg"],
+    ["formato de imagem nao suportado", "data:image/gif;base64,AAAA"],
+    ["grande demais", `data:image/jpeg;base64,${"Z".repeat(700001)}`],
+  ])("rejeita fotoUrl inválida: %s", async (_label, fotoUrl) => {
+    const token = await registrarELogar();
+    const res = await request(app)
+      .put("/api/users/me")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ nome: usuarioValido.nome, email: usuarioValido.email, fotoUrl });
+    expect(res.status).toBe(422);
+    expect(res.body.campos).toHaveProperty("fotoUrl");
+  });
 });
 
 describe("PUT /api/users/senha", () => {

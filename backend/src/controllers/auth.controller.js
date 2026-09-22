@@ -49,6 +49,12 @@ async function me(req, res, next) {
   }
 }
 
+// Foto aceita como data URL (base64) direto no banco - sem servico de armazenamento externo.
+// Limite de tamanho pra nao deixar a tabela pesada: ~700 mil caracteres em base64 da' uma
+// imagem de uns 500 KB, de sobra pra um avatar (a pessoa deve mandar ja' pequena/comprimida).
+const FOTO_RE = /^data:image\/(png|jpe?g|webp);base64,/;
+const FOTO_TAMANHO_MAXIMO = 700000;
+
 async function updateMe(req, res, next) {
   try {
     const nome = String((req.body || {}).nome || "").trim();
@@ -56,6 +62,31 @@ async function updateMe(req, res, next) {
     const erros = {};
     if (nome.length < 2) erros.nome = "Informe seu nome completo.";
     if (!email) erros.email = "O e-mail é obrigatório.";
+
+    const atual = await userModel.findById(req.usuarioId);
+    if (!atual) return res.status(404).json({ erro: "Usuário não encontrado." });
+
+    // bio e fotoUrl sao opcionais: so' mexe se a pessoa mandou o campo (senao mantem o que ja
+    // estava salvo, pra nao precisar reenviar a foto toda vez que so' o nome muda).
+    let bio = atual.bio;
+    if (Object.prototype.hasOwnProperty.call(req.body || {}, "bio")) {
+      bio = String(req.body.bio || "").trim().slice(0, 280) || null;
+    }
+
+    let fotoUrl = atual.foto_url;
+    if (Object.prototype.hasOwnProperty.call(req.body || {}, "fotoUrl")) {
+      const valor = req.body.fotoUrl;
+      if (!valor) {
+        fotoUrl = null;
+      } else if (typeof valor !== "string" || !FOTO_RE.test(valor)) {
+        erros.fotoUrl = "A foto precisa ser uma imagem (PNG, JPG ou WEBP).";
+      } else if (valor.length > FOTO_TAMANHO_MAXIMO) {
+        erros.fotoUrl = "A foto está grande demais. Escolha uma imagem menor.";
+      } else {
+        fotoUrl = valor;
+      }
+    }
+
     if (Object.keys(erros).length) return res.status(422).json({ erro: "Dados inválidos.", campos: erros });
 
     const existente = await userModel.findByEmail(email);
@@ -63,7 +94,7 @@ async function updateMe(req, res, next) {
       return res.status(409).json({ erro: "Já existe uma conta com esse e-mail.", campos: { email: "Já existe uma conta com esse e-mail." } });
     }
 
-    const usuario = await userModel.updateProfile(req.usuarioId, { nome, email });
+    const usuario = await userModel.updateProfile(req.usuarioId, { nome, email, bio, fotoUrl });
     if (!usuario) return res.status(404).json({ erro: "Usuário não encontrado." });
     return res.json({ usuario });
   } catch (err) {

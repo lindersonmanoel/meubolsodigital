@@ -2,7 +2,7 @@
 
 const pool = require("../database/pool");
 
-const PUBLIC_FIELDS = "id, nome, email, criado_em, atualizado_em";
+const PUBLIC_FIELDS = "id, nome, email, bio, foto_url, criado_em, atualizado_em";
 
 async function findByEmail(email) {
   const { rows } = await pool.query("SELECT * FROM usuarios WHERE email = $1", [email]);
@@ -23,10 +23,11 @@ async function create({ nome, email, senhaHash }) {
   return rows[0];
 }
 
-async function updateProfile(id, { nome, email }) {
+async function updateProfile(id, { nome, email, bio, fotoUrl }) {
   const { rows } = await pool.query(
-    `UPDATE usuarios SET nome = $1, email = $2, atualizado_em = now() WHERE id = $3 RETURNING ${PUBLIC_FIELDS}`,
-    [nome, email, id]
+    `UPDATE usuarios SET nome = $1, email = $2, bio = $3, foto_url = $4, atualizado_em = now()
+      WHERE id = $5 RETURNING ${PUBLIC_FIELDS}`,
+    [nome, email, bio ?? null, fotoUrl ?? null, id]
   );
   return rows[0] || null;
 }
