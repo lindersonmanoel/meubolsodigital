@@ -19,8 +19,10 @@
 .auth-logo img {
   width: 88px;
   height: 88px;
-  border-radius: 20px;
+  border-radius: 50%;
   object-fit: cover;
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(13, 59, 102, 0.12);
 }
 
 .auth-rodape {
@@ -49,8 +51,9 @@
 .app-topbar .marca img {
   width: 32px;
   height: 32px;
-  border-radius: 8px;
+  border-radius: 50%;
   object-fit: cover;
+  background: #fff;
 }
 .app-conteudo {
   max-width: 960px;

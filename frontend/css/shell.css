@@ -29,8 +29,9 @@
 .app-sidebar .marca img {
   width: 30px;
   height: 30px;
-  border-radius: 8px;
+  border-radius: 50%;
   object-fit: cover;
+  background: #fff;
 }
 .sidebar-nav {
   display: flex;
