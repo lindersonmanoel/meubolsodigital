@@ -1,0 +1,177 @@
+/* Tela de login/cadastro "hero": fundo com formas onduladas nas cores da marca, texto de
+   apresentacao ao lado do card e fileira de recursos embaixo. So' CSS/SVG, sem imagem extra. */
+
+.tela-auth-nova {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f7fbf9 0%, #f1f8f5 45%, #eef5f7 100%);
+  display: flex;
+  flex-direction: column;
+}
+
+.forma-decorativa {
+  position: absolute;
+  border-radius: 50%;
+  z-index: 0;
+  pointer-events: none;
+}
+.forma-topo-direita {
+  top: -20vw;
+  right: -15vw;
+  width: 48vw;
+  height: 48vw;
+  background: linear-gradient(135deg, #0d3b66 0%, #12684f 55%, #1fa974 100%);
+}
+.forma-base-esquerda {
+  bottom: -24vw;
+  left: -20vw;
+  width: 54vw;
+  height: 54vw;
+  background: linear-gradient(315deg, #082a4a 0%, #0d3b66 42%, #1fa974 100%);
+}
+.forma-base-esquerda::after {
+  content: "";
+  position: absolute;
+  inset: 7%;
+  border-radius: 50%;
+  border: 3px solid rgba(74, 222, 128, 0.55);
+  border-left-color: transparent;
+  border-bottom-color: transparent;
+}
+
+.auth-conteudo {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 32px clamp(20px, 5vw, 64px);
+}
+
+.auth-marca-topo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: clamp(24px, 6vh, 56px);
+}
+.auth-marca-topo img {
+  width: 52px;
+  height: 52px;
+}
+.auth-marca-nome {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--azul-escuro);
+  line-height: 1.1;
+}
+.auth-marca-nome span {
+  color: var(--verde);
+}
+.auth-marca-slogan {
+  font-size: 0.82rem;
+  color: var(--dim);
+}
+
+.auth-grade {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(24px, 6vw, 96px);
+  flex-wrap: wrap;
+}
+
+.auth-promo {
+  max-width: 420px;
+  flex: 1 1 320px;
+}
+.auth-promo h1 {
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  line-height: 1.25;
+  margin: 0 0 14px;
+}
+.auth-promo p {
+  color: var(--dim);
+  font-size: 1rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.auth-caixa-nova {
+  width: 100%;
+  max-width: 420px;
+  flex-shrink: 0;
+}
+
+.auth-recursos {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  gap: clamp(16px, 4vw, 40px);
+  flex-wrap: wrap;
+  padding: 24px 20px 32px;
+}
+.auth-recurso {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--azul-escuro);
+}
+.auth-recurso svg {
+  width: 20px;
+  height: 20px;
+  color: var(--verde);
+  flex-shrink: 0;
+}
+
+/* Campos com icone (envelope, cadeado) e botao de mostrar/esconder senha */
+.campo-com-icone {
+  position: relative;
+}
+.campo-com-icone .icone-campo {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  color: var(--dim);
+  pointer-events: none;
+}
+.campo-com-icone input {
+  padding-left: 38px;
+}
+.campo-com-icone .alternar-senha {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--dim);
+  padding: 6px;
+  display: inline-flex;
+}
+.campo-com-icone .alternar-senha svg {
+  width: 18px;
+  height: 18px;
+}
+.campo-com-icone input[type="password"],
+.campo-com-icone input[type="text"] {
+  padding-right: 38px;
+}
+
+@media (max-width: 760px) {
+  /* No celular o cartao de login vem primeiro (o que a pessoa quer fazer), o texto de
+     apresentacao vem depois - ordem visual via flex, sem mudar o HTML. */
+  .auth-caixa-nova { order: 1; }
+  .auth-promo { order: 2; text-align: center; }
+  .auth-marca-topo { justify-content: center; }
+  .forma-topo-direita { width: 70vw; height: 70vw; top: -30vw; right: -30vw; }
+  .forma-base-esquerda { width: 80vw; height: 80vw; bottom: -35vw; left: -35vw; }
+}
