@@ -49,4 +49,19 @@ async function remover(usuarioId, id) {
   return rowCount > 0;
 }
 
-module.exports = { listar, buscarPorId, existeComNome, criar, atualizar, remover };
+/** A categoria já está em uso (movimentação, recorrência ou orçamento)? Usado pra impedir
+ * trocar o tipo (receita/despesa) de uma categoria que já tem dados ligados a ela - senão
+ * fica uma despesa antiga apontando pra uma categoria que agora é "receita", por exemplo. */
+async function emUso(usuarioId, id) {
+  const { rows } = await pool.query(
+    `SELECT
+       EXISTS(SELECT 1 FROM movimentacoes WHERE usuario_id = $1 AND categoria_id = $2) AS movimentacao,
+       EXISTS(SELECT 1 FROM recorrencias WHERE usuario_id = $1 AND categoria_id = $2) AS recorrencia,
+       EXISTS(SELECT 1 FROM orcamentos WHERE usuario_id = $1 AND categoria_id = $2) AS orcamento`,
+    [usuarioId, id]
+  );
+  const r = rows[0];
+  return r.movimentacao || r.recorrencia || r.orcamento;
+}
+
+module.exports = { listar, buscarPorId, existeComNome, criar, atualizar, remover, emUso };

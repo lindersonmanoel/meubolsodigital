@@ -62,6 +62,21 @@ describe("categorias", () => {
     expect(outraPessoa.status).toBe(201);
   });
 
+  test("não deixa trocar o tipo de uma categoria que já tem movimentação (evita dado inconsistente)", async () => {
+    const { headers } = await criarUsuarioAutenticado(app);
+    const criada = await request(app).post("/api/categorias").set(headers).send({ nome: "Mercado", tipo: "despesa" });
+    const id = criada.body.categoria.id;
+    await request(app).post("/api/movimentacoes").set(headers).send({
+      tipo: "despesa", descricao: "Compras", valor: 50, data: "2026-01-01", categoriaId: id,
+    });
+
+    const trocaTipo = await request(app).put(`/api/categorias/${id}`).set(headers).send({ nome: "Mercado", tipo: "receita" });
+    expect(trocaTipo.status).toBe(409);
+
+    const soRenomeia = await request(app).put(`/api/categorias/${id}`).set(headers).send({ nome: "Mercado e Feira", tipo: "despesa" });
+    expect(soRenomeia.status).toBe(200);
+  });
+
   test("cada pessoa só vê e mexe nas próprias categorias", async () => {
     const a = await criarUsuarioAutenticado(app);
     const b = await criarUsuarioAutenticado(app);

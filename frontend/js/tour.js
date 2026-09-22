@@ -53,8 +53,13 @@ const Tour = (function () {
   }
 
   let elementos = null; // { overlayTop, overlayBottom, overlayLeft, overlayRight, moldura, balao }
+  let pararDeEscutar = null; // remove os listeners de resize/scroll do passo atual
 
   function removerElementos() {
+    if (pararDeEscutar) {
+      pararDeEscutar();
+      pararDeEscutar = null;
+    }
     if (!elementos) return;
     Object.values(elementos).forEach((el) => el.remove());
     elementos = null;
@@ -179,14 +184,13 @@ const Tour = (function () {
     }
     window.addEventListener("resize", reposicionar);
     window.addEventListener("scroll", reposicionar, true);
-    elementos._limpar = () => {
+    pararDeEscutar = () => {
       window.removeEventListener("resize", reposicionar);
       window.removeEventListener("scroll", reposicionar, true);
     };
   }
 
   function finalizar() {
-    if (elementos && elementos._limpar) elementos._limpar();
     removerElementos();
     limparPasso();
     marcarVisto();

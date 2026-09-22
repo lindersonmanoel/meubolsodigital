@@ -32,6 +32,18 @@ async function criar(usuarioId, dados) {
 async function atualizar(usuarioId, id, dados) {
   const { erros, nome, tipo } = validar(dados);
   if (Object.keys(erros).length) throw new AppError("Dados inválidos.", 422, erros);
+
+  const atual = await categoriaModel.buscarPorId(usuarioId, id);
+  if (!atual) throw new AppError("Categoria não encontrada.", 404);
+
+  if (atual.tipo !== tipo && (await categoriaModel.emUso(usuarioId, id))) {
+    throw new AppError(
+      "Essa categoria já tem movimentações, recorrências ou um orçamento ligados a ela - não dá pra trocar entre receita e despesa. Crie uma categoria nova se precisar do outro tipo.",
+      409,
+      { tipo: "Não dá pra trocar o tipo de uma categoria já em uso." }
+    );
+  }
+
   if (await categoriaModel.existeComNome(usuarioId, nome, tipo, id)) {
     throw new AppError("Você já tem uma categoria com esse nome para esse tipo.", 409, {
       nome: "Você já tem uma categoria com esse nome para esse tipo.",

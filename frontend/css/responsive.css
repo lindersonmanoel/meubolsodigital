@@ -26,4 +26,20 @@
   table.tabela th, table.tabela td { padding: 10px 10px; font-size: 0.82rem; }
   .tabela-caixa { overflow-x: auto; }
   table.tabela { min-width: 560px; }
+
+  /* No celular a faixa fixa no canto colide com os botoes do topo (menu, ajuda) - desce
+     pro rodape da tela em vez de flutuar em cima do cabecalho. */
+  .faixa-instalar {
+    top: auto;
+    right: 12px;
+    left: 12px;
+    bottom: 12px;
+    width: auto;
+    max-height: 60vh;
+  }
+}
+
+@media (max-width: 380px) {
+  .grade-cartoes { grid-template-columns: 1fr; }
+  .cartao-metrica .valor { font-size: 1.3rem; }
 }
