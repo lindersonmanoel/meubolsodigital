@@ -3,19 +3,21 @@
 // Service worker do Meu Bolso Digital: guarda a "casca" do app (HTML/CSS/JS/icone) pra
 // abrir rapido e funcionar offline. Nunca guarda respostas da API (dados financeiros
 // tem que vir sempre atualizados do servidor).
-const CACHE_NAME = "mbd-cache-v2";
+const CACHE_NAME = "mbd-cache-v3";
+// URLs "limpas" (sem .html) - e' o que o cleanUrls do vercel.json realmente serve; usar
+// esses paths no precache evita cair no redirecionamento 308 (.html -> sem extensao).
 const ARQUIVOS_ESSENCIAIS = [
-  "index.html",
-  "login.html",
-  "cadastro.html",
-  "dashboard.html",
-  "categorias.html",
-  "movimentacoes.html",
-  "receitas.html",
-  "despesas.html",
-  "metas.html",
-  "relatorios.html",
-  "configuracoes.html",
+  "/",
+  "login",
+  "cadastro",
+  "dashboard",
+  "categorias",
+  "movimentacoes",
+  "receitas",
+  "despesas",
+  "metas",
+  "relatorios",
+  "configuracoes",
   "manifest.json",
   "css/global.css",
   "css/layout.css",
@@ -34,10 +36,18 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(CACHE_NAME)
-      .then((cache) => cache.addAll(ARQUIVOS_ESSENCIAIS))
-      .catch(() => {
-        // se algum arquivo falhar (ex.: rodando de um path diferente), nao trava a instalacao
-      })
+      .then((cache) =>
+        Promise.all(
+          ARQUIVOS_ESSENCIAIS.map((caminho) =>
+            fetch(caminho)
+              .then((resposta) => Promise.resolve(semRedirecionamento(resposta)))
+              .then((final) => cache.put(caminho, final))
+              .catch(() => {
+                // um arquivo faltando (ex.: rodando de outro path) nao trava a instalacao
+              })
+          )
+        )
+      )
   );
   self.skipWaiting();
 });
@@ -51,6 +61,18 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+// O Chrome recusa responder uma navegacao (event.respondWith) com uma Response cujo
+// "redirected" seja true (e o Cache API tambem recusa guardar uma assim) - por causa do
+// cleanUrls do vercel.json (".html" -> sem extensao), toda resposta que passar por um
+// redirecionamento precisa ser reconstruida antes de usar, senao vira ERR_FAILED na tela.
+function semRedirecionamento(resposta) {
+  if (!resposta.redirected) return resposta;
+  return resposta.blob().then(
+    (corpo) => new Response(corpo, { status: resposta.status, statusText: resposta.statusText, headers: resposta.headers }),
+    () => resposta
+  );
+}
+
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return; // nunca intercepta POST/PUT/DELETE
@@ -61,11 +83,11 @@ self.addEventListener("fetch", (event) => {
     caches.match(req).then((cacheado) => {
       const buscaNaRede = fetch(req)
         .then((resposta) => {
-          if (resposta && resposta.ok) {
-            const copia = resposta.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(req, copia));
-          }
-          return resposta;
+          if (!resposta || !resposta.ok) return resposta;
+          return Promise.resolve(semRedirecionamento(resposta)).then((final) => {
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, final.clone()));
+            return final;
+          });
         })
         .catch(() => cacheado);
       return cacheado || buscaNaRede;
