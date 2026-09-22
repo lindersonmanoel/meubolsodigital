@@ -448,7 +448,7 @@ table.tabela tbody tr:hover { background: #f8fafc; }
   position: relative;
   background: var(--verde);
   border: none;
-  border-radius: 50%;
+  border-radius: 6px;
   width: 30px;
   height: 30px;
   display: inline-flex;
