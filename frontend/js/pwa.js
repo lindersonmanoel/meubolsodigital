@@ -5,11 +5,54 @@
 // navegadores baseados em Chromium). Safari (iPhone/iPad/Mac) nao dispara esse evento - por
 // isso o Instalador tambem mostra o passo a passo manual (ver configuracoes.html).
 if ("serviceWorker" in navigator) {
+  // Se ja' havia um service worker controlando a pagina quando ela carregou, uma troca de
+  // controlador depois disso e' uma ATUALIZACAO de verdade (nao a primeira instalacao) -
+  // e' o gatilho do aviso "nova versao disponivel".
+  let controladorAntesDeAtualizar = navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (controladorAntesDeAtualizar) mostrarAvisoAtualizacao();
+    controladorAntesDeAtualizar = navigator.serviceWorker.controller;
+  });
+
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("service-worker.js").catch(() => {
       // sem service worker o app continua funcionando normalmente, so sem modo offline
     });
   });
+}
+
+/** Mostra "nova versao disponivel" com a versao e um resumo do que mudou (ver versao.js),
+ * e um botao pra recarregar a pagina e usar a versao nova. */
+function mostrarAvisoAtualizacao() {
+  if (document.querySelector(".faixa-atualizacao")) return;
+  const ultima = (window.CHANGELOG && window.CHANGELOG[0]) || null;
+  const versao = ultima ? ultima.versao : "";
+  const mudancas = ultima ? ultima.mudancas : [];
+
+  const faixa = document.createElement("section");
+  faixa.className = "faixa-instalar faixa-atualizacao";
+  faixa.innerHTML = `
+    <div class="faixa-instalar-linha">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icone-faixa-instalar"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      <div class="texto-faixa-instalar">
+        <strong>Nova versão disponível${versao ? ` (v${versao})` : ""}</strong>
+        ${mudancas.length ? `<span class="hint">${mudancas[0]}</span>` : ""}
+      </div>
+      <button type="button" class="btn btn-primario" data-acao="atualizar" style="width:auto;padding:8px 16px">Atualizar agora</button>
+      <button type="button" class="fechar-faixa-instalar" aria-label="Fechar aviso de atualização" data-acao="fechar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    ${
+      mudancas.length > 1
+        ? `<ul class="lista-mudancas">${mudancas.map((m) => `<li>${m}</li>`).join("")}</ul>`
+        : ""
+    }
+  `;
+  document.body.appendChild(faixa);
+
+  faixa.querySelector('[data-acao="atualizar"]').addEventListener("click", () => window.location.reload());
+  faixa.querySelector('[data-acao="fechar"]').addEventListener("click", () => faixa.remove());
 }
 
 const Instalador = (function () {

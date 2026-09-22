@@ -28,7 +28,9 @@
   table.tabela { min-width: 560px; }
 
   /* No celular a faixa fixa no canto colide com os botoes do topo (menu, ajuda) - desce
-     pro rodape da tela em vez de flutuar em cima do cabecalho. */
+     pro rodape da tela em vez de flutuar em cima do cabecalho. O aviso de atualizacao fica
+     em cima em vez de embaixo, pra nao empilhar exatamente no mesmo lugar que o de instalar
+     se os dois aparecerem juntos. */
   .faixa-instalar {
     top: auto;
     right: 12px;
@@ -36,6 +38,10 @@
     bottom: 12px;
     width: auto;
     max-height: 60vh;
+  }
+  .faixa-atualizacao {
+    top: 12px;
+    bottom: auto;
   }
 }
 

@@ -44,6 +44,9 @@ Sem Supabase: toda comunicação entre o frontend e o banco passa pela API do ba
   no dashboard. Funciona offline pra abrir rápido (nunca guarda dados financeiros em cache).
 - **Tour guiado**: botão "?" sempre visível no topo, mostra uma explicação de cada tela
   principal, com destaque visual no elemento e navegação entre as páginas.
+- **Aviso de atualização automática**: quando uma versão nova do app é publicada, quem já
+  está usando (inclusive instalado) recebe um aviso com o número da versão e um resumo do
+  que mudou, com um botão pra atualizar na hora (ver `js/versao.js` e `js/pwa.js`).
 - Menu lateral (colapsa em menu deslizante no celular) em todas as telas logadas.
 
 ## Segurança
@@ -78,8 +81,9 @@ MeuBolsoDigital/
 │   │                          instalador), responsive.css, print.css (relatório em PDF)
 │   ├── js/                   api.js (cliente HTTP), auth.js (sessão), shell.js (menu lateral),
 │   │                          movimentacoes.js (motor de receitas/despesas/movimentações),
-│   │                          pwa.js (service worker + instalador do app), tour.js (tour
-│   │                          guiado), config.js (endereço da API)
+│   │                          pwa.js (service worker + instalador do app + aviso de
+│   │                          atualização), tour.js (tour guiado), versao.js (número da
+│   │                          versão + changelog), config.js (endereço da API)
 │   ├── assets/images/        logo.png (marca completa), logo-icon.png (ícone redondo,
 │   │                          usado no favicon/sidebar/instalação), logo-maskable.png
 │   │                          (ícone adaptativo do Android)
