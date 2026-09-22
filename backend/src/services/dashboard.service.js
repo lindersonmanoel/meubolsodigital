@@ -1,6 +1,7 @@
 "use strict";
 
 const movimentacaoModel = require("../models/movimentacao.model");
+const recorrenciaService = require("./recorrencia.service");
 
 const DATA_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -11,6 +12,11 @@ function periodoDoMesAtual() {
 }
 
 async function resumo(usuarioId) {
+  // Antes de calcular qualquer coisa, garante que as receitas/despesas fixas do mes atual
+  // ja foram lancadas (sem isso, quem tem recorrencia mas nao mexeu em movimentacoes nao
+  // veria o lançamento automatico refletido no saldo).
+  await recorrenciaService.gerarDoMesAtual(usuarioId);
+
   const { inicio } = periodoDoMesAtual();
   const [saldo, doMes] = await Promise.all([
     movimentacaoModel.saldoTotal(usuarioId),

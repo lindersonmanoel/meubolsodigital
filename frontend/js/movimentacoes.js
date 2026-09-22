@@ -139,6 +139,21 @@ function iniciarPaginaMovimentacoes(opcoes) {
     }
   }
 
+  const btnExportar = document.getElementById("btn-exportar");
+  if (btnExportar) {
+    btnExportar.addEventListener("click", async () => {
+      btnExportar.disabled = true;
+      try {
+        const url = Api.urlExportarMovimentacoes(base, filtrosAtuais());
+        await Api.baixarCsv(url, `${base}.csv`);
+      } catch (err) {
+        mostrarErro(erroGeral, err.message);
+      } finally {
+        btnExportar.disabled = false;
+      }
+    });
+  }
+
   document.getElementById("form-filtros").addEventListener("submit", (e) => {
     e.preventDefault();
     carregarLista();

@@ -12,6 +12,7 @@ function buildRouter(tipoFixo) {
   const controller = build(tipoFixo);
   router.use(requireAuth);
   router.get("/", controller.listar);
+  router.get("/exportar", controller.exportarCsv);
   router.post("/", controller.criar);
   router.put("/:id", validarIdNaRota, controller.atualizar);
   router.delete("/:id", validarIdNaRota, controller.remover);

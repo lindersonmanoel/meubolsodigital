@@ -57,7 +57,15 @@
 }
 .sidebar-icone {
   width: 20px;
-  text-align: center;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.sidebar-icone svg {
+  width: 18px;
+  height: 18px;
 }
 .sidebar-sair {
   margin-top: 10px;
@@ -86,10 +94,14 @@
   display: none;
   background: none;
   border: none;
-  font-size: 1.3rem;
   cursor: pointer;
   color: var(--azul-escuro);
   padding: 4px 8px;
+  align-items: center;
+}
+.app-menu-btn svg {
+  width: 22px;
+  height: 22px;
 }
 
 /* Componentes reutilizados nas telas internas */
@@ -240,7 +252,8 @@ table.tabela tbody tr:hover { background: #f8fafc; }
   gap: 10px;
   flex-wrap: wrap;
 }
-.cartao-meta .topo-meta h3 { margin: 0; }
+.cartao-meta .topo-meta h3 { margin: 0; display: inline-flex; align-items: center; gap: 6px; }
+.icone-completa { width: 18px; height: 18px; color: var(--verde); flex-shrink: 0; }
 .cartao-meta .valores-meta { font-size: 0.85rem; color: var(--dim); margin-top: 2px; }
 
 .painel-formulario {

@@ -1,6 +1,12 @@
 "use strict";
 
 const service = require("../services/dashboard.service");
+const { paraCsv } = require("../utils/csv");
+
+const COLUNAS_RELATORIO_CSV = [
+  { chave: "categoria", rotulo: "Categoria" },
+  { chave: "total", rotulo: "Total de despesas" },
+];
 
 async function resumo(req, res, next) {
   try {
@@ -27,4 +33,16 @@ async function relatorio(req, res, next) {
   }
 }
 
-module.exports = { resumo, graficos, relatorio };
+async function relatorioCsv(req, res, next) {
+  try {
+    const dados = await service.relatorio(req.usuarioId, req.query);
+    const csv = paraCsv(dados.despesasPorCategoria, COLUNAS_RELATORIO_CSV);
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="relatorio.csv"`);
+    res.send(csv);
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { resumo, graficos, relatorio, relatorioCsv };

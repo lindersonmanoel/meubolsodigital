@@ -12,6 +12,8 @@ const movimentacaoRoutes = require("./routes/movimentacao.routes");
 const metaRoutes = require("./routes/meta.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
 const relatorioRoutes = require("./routes/relatorio.routes");
+const recorrenciaRoutes = require("./routes/recorrencia.routes");
+const orcamentoRoutes = require("./routes/orcamento.routes");
 const errorHandler = require("./middleware/errorHandler");
 
 const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "[::1]"]);
@@ -71,6 +73,8 @@ function createApp() {
   app.use("/api/metas", metaRoutes);
   app.use("/api/dashboard", dashboardRoutes);
   app.use("/api/relatorios", relatorioRoutes);
+  app.use("/api/recorrencias", recorrenciaRoutes);
+  app.use("/api/orcamentos", orcamentoRoutes);
 
   app.use((_req, res) => {
     res.status(404).json({ erro: "Rota não encontrada." });

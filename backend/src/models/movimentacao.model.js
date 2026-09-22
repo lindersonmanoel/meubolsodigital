@@ -4,7 +4,7 @@ const pool = require("../database/pool");
 
 const SELECT_BASE = `
   SELECT m.id, m.tipo, m.descricao, m.valor, m.data, m.observacao, m.categoria_id,
-         c.nome AS categoria_nome, m.criado_em, m.atualizado_em
+         c.nome AS categoria_nome, m.recorrencia_id, m.criado_em, m.atualizado_em
   FROM movimentacoes m
   LEFT JOIN categorias c ON c.id = m.categoria_id
 `;
@@ -65,6 +65,27 @@ async function atualizar(usuarioId, id, dados) {
 async function remover(usuarioId, id) {
   const { rowCount } = await pool.query("DELETE FROM movimentacoes WHERE usuario_id = $1 AND id = $2", [usuarioId, id]);
   return rowCount > 0;
+}
+
+/** Ja existe uma movimentacao gerada por essa recorrencia neste mes (evita duplicar)? */
+async function existeGeradaNoMes(usuarioId, recorrenciaId, anoMes) {
+  const { rows } = await pool.query(
+    `SELECT 1 FROM movimentacoes
+      WHERE usuario_id = $1 AND recorrencia_id = $2 AND to_char(data, 'YYYY-MM') = $3
+      LIMIT 1`,
+    [usuarioId, recorrenciaId, anoMes]
+  );
+  return rows.length > 0;
+}
+
+/** Cria a movimentacao do mes a partir de uma recorrencia (receita/despesa fixa). */
+async function criarDeRecorrencia(usuarioId, { recorrenciaId, categoriaId, tipo, descricao, valor, data }) {
+  const { rows } = await pool.query(
+    `INSERT INTO movimentacoes (usuario_id, categoria_id, tipo, descricao, valor, data, recorrencia_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+    [usuarioId, categoriaId || null, tipo, descricao, valor, data, recorrenciaId]
+  );
+  return buscarPorId(usuarioId, rows[0].id);
 }
 
 /** Totais de receita/despesa dentro de um periodo (usado pelo dashboard e pelos relatorios). */
@@ -135,4 +156,5 @@ async function despesasPorCategoria(usuarioId, { inicio, fim } = {}) {
 module.exports = {
   listar, buscarPorId, criar, atualizar, remover,
   totaisPorTipo, saldoTotal, porMes, despesasPorCategoria,
+  existeGeradaNoMes, criarDeRecorrencia,
 };

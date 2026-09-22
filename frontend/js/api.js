@@ -87,5 +87,36 @@ const Api = (function () {
     resumoDashboard: () => request("/dashboard/resumo", { autenticado: true }),
     graficosDashboard: (meses) => request(`/dashboard/graficos${montarQuery({ meses })}`, { autenticado: true }),
     relatorio: (filtros) => request(`/relatorios${montarQuery(filtros)}`, { autenticado: true }),
+
+    // Recorrências (receitas/despesas fixas)
+    listarRecorrencias: () => request("/recorrencias", { autenticado: true }),
+    criarRecorrencia: (payload) => request("/recorrencias", { method: "POST", body: payload, autenticado: true }),
+    atualizarRecorrencia: (id, payload) => request(`/recorrencias/${id}`, { method: "PUT", body: payload, autenticado: true }),
+    removerRecorrencia: (id) => request(`/recorrencias/${id}`, { method: "DELETE", autenticado: true }),
+
+    // Orçamentos por categoria
+    listarOrcamentos: () => request("/orcamentos", { autenticado: true }),
+    criarOrcamento: (payload) => request("/orcamentos", { method: "POST", body: payload, autenticado: true }),
+    atualizarOrcamento: (id, payload) => request(`/orcamentos/${id}`, { method: "PUT", body: payload, autenticado: true }),
+    removerOrcamento: (id) => request(`/orcamentos/${id}`, { method: "DELETE", autenticado: true }),
+
+    // Exportação (baixa o arquivo direto, autenticando via token na URL nao e' preciso pq
+    // usamos <a download> com blob - ver urlExportar)
+    urlExportarMovimentacoes: (base, filtros) => `${window.API_BASE_URL}/${base}/exportar${montarQuery(filtros)}`,
+    urlExportarRelatorio: (filtros) => `${window.API_BASE_URL}/relatorios/exportar${montarQuery(filtros)}`,
+    async baixarCsv(url, nomeArquivo) {
+      const token = tokenAtual();
+      const res = await fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      if (!res.ok) throw new ApiError("Não consegui gerar o arquivo.", res.status, {});
+      const blob = await res.blob();
+      const linkUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = linkUrl;
+      a.download = nomeArquivo;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(linkUrl);
+    },
   };
 })();

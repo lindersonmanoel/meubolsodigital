@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orçamentos | Meu Bolso Digital</title>
+<link rel="icon" href="assets/images/logo.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d3b66">
+<link rel="stylesheet" href="css/global.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/shell.css">
+<link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+  <template id="conteudo-pagina">
+    <div class="barra-topo-pagina">
+      <div>
+        <h1>Orçamentos</h1>
+        <p class="hint">Defina um limite mensal de gasto por categoria e acompanhe o quanto já usou.</p>
+      </div>
+      <button type="button" class="btn btn-primario" id="btn-novo" style="width:auto;padding:10px 18px">+ Novo orçamento</button>
+    </div>
+
+    <p class="alerta alerta-erro" id="erro-geral" hidden></p>
+
+    <section class="painel-formulario" id="painel-formulario" hidden>
+      <h2 id="titulo-formulario">Novo orçamento</h2>
+      <form id="form-orcamento" novalidate>
+        <input type="hidden" id="orcamento-id">
+        <div class="linha-campos">
+          <div class="campo">
+            <label for="categoriaId">Categoria de despesa</label>
+            <select id="categoriaId" required></select>
+            <p class="erro-campo" data-campo="categoriaId" hidden></p>
+          </div>
+          <div class="campo">
+            <label for="valorLimite">Limite mensal (R$)</label>
+            <input type="number" id="valorLimite" step="0.01" min="0.01" required>
+            <p class="erro-campo" data-campo="valorLimite" hidden></p>
+          </div>
+        </div>
+        <div class="acoes-formulario">
+          <button type="submit" class="btn btn-primario" id="btn-salvar">Salvar</button>
+          <button type="button" class="btn btn-secundario" id="btn-cancelar">Cancelar</button>
+        </div>
+      </form>
+    </section>
+
+    <div id="lista-orcamentos"></div>
+    <p class="vazio" id="lista-vazia" hidden>Você ainda não tem orçamentos. Crie o primeiro acima.</p>
+    <p class="spinner-carregando" id="carregando">Carregando...</p>
+  </template>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/shell.js"></script>
+  <script src="js/pwa.js"></script>
+  <script>
+    Sessao.exigirLogin();
+    montarShell("orcamentos");
+
+    const erroGeral = document.getElementById("erro-geral");
+    const painel = document.getElementById("painel-formulario");
+    const form = document.getElementById("form-orcamento");
+    const listaOrcamentos = document.getElementById("lista-orcamentos");
+    const listaVazia = document.getElementById("lista-vazia");
+    const carregando = document.getElementById("carregando");
+    const selectCategoria = document.getElementById("categoriaId");
+
+    function escaparHtml(texto) {
+      const div = document.createElement("div");
+      div.textContent = texto;
+      return div.innerHTML;
+    }
+
+    async function popularCategorias() {
+      try {
+        const { categorias } = await Api.listarCategorias();
+        const despesas = categorias.filter((c) => c.tipo === "despesa");
+        selectCategoria.innerHTML = despesas.length
+          ? despesas.map((c) => `<option value="${c.id}">${escaparHtml(c.nome)}</option>`).join("")
+          : '<option value="">Crie uma categoria de despesa primeiro</option>';
+      } catch (e) { /* segue sem categorias */ }
+    }
+
+    function abrirFormulario(orcamento) {
+      form.reset();
+      limparErrosCampos(form);
+      document.getElementById("orcamento-id").value = orcamento ? orcamento.id : "";
+      document.getElementById("titulo-formulario").textContent = orcamento ? "Editar orçamento" : "Novo orçamento";
+      selectCategoria.disabled = !!orcamento; // nao deixa trocar a categoria na edicao, so o limite
+      if (orcamento) {
+        selectCategoria.innerHTML = `<option value="${orcamento.categoria_id}">${escaparHtml(orcamento.categoria_nome)}</option>`;
+        document.getElementById("valorLimite").value = orcamento.valor_limite;
+      }
+      painel.hidden = false;
+      document.getElementById("valorLimite").focus();
+    }
+    function fecharFormulario() {
+      painel.hidden = true;
+      form.reset();
+      selectCategoria.disabled = false;
+    }
+    document.getElementById("btn-novo").addEventListener("click", async () => {
+      await popularCategorias();
+      abrirFormulario(null);
+    });
+    document.getElementById("btn-cancelar").addEventListener("click", fecharFormulario);
+
+    function cartaoOrcamento(o) {
+      const div = document.createElement("div");
+      div.className = "cartao-meta";
+      const corBarra = o.situacao === "estourado" ? "despesa" : o.situacao === "perto_do_limite" ? "" : "completa";
+      const rotuloSituacao =
+        o.situacao === "estourado" ? " · limite estourado" : o.situacao === "perto_do_limite" ? " · perto do limite" : "";
+      div.innerHTML = `
+        <div class="topo-meta">
+          <h3>${escaparHtml(o.categoria_nome)}</h3>
+          <span class="${o.situacao === "estourado" ? "valor-despesa" : ""}">${o.percentual}%${rotuloSituacao}</span>
+        </div>
+        <div class="valores-meta">${formatarMoeda(o.gasto_no_mes)} de ${formatarMoeda(o.valor_limite)} neste mês</div>
+        <div class="progresso-barra${o.situacao === "estourado" ? " completa" : ""}" style="${o.situacao === "estourado" ? "background:#fee2e2" : ""}">
+          <div style="width:${Math.min(100, o.percentual)}%;${o.situacao === "estourado" ? "background:var(--erro)" : ""}"></div>
+        </div>
+        <div class="tabela-acoes" style="margin-top:10px">
+          <button type="button" data-acao="editar">Editar limite</button>
+          <button type="button" class="excluir" data-acao="excluir">Excluir</button>
+        </div>
+      `;
+      div.querySelector('[data-acao="editar"]').addEventListener("click", () => abrirFormulario(o));
+      div.querySelector('[data-acao="excluir"]').addEventListener("click", () => excluir(o));
+      return div;
+    }
+
+    async function excluir(o) {
+      if (!confirm(`Excluir o orçamento de "${o.categoria_nome}"?`)) return;
+      try {
+        await Api.removerOrcamento(o.id);
+        await carregarLista();
+      } catch (err) {
+        mostrarErro(erroGeral, err.message);
+      }
+    }
+
+    async function carregarLista() {
+      mostrarErro(erroGeral, "");
+      carregando.hidden = false;
+      try {
+        const { orcamentos } = await Api.listarOrcamentos();
+        listaOrcamentos.innerHTML = "";
+        orcamentos.forEach((o) => listaOrcamentos.appendChild(cartaoOrcamento(o)));
+        listaVazia.hidden = orcamentos.length > 0;
+      } catch (err) {
+        if (err.status === 401) { Sessao.encerrar(); window.location.href = "login.html"; return; }
+        mostrarErro(erroGeral, err.message);
+      } finally {
+        carregando.hidden = true;
+      }
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      mostrarErro(erroGeral, "");
+      limparErrosCampos(form);
+      const btn = document.getElementById("btn-salvar");
+      btn.disabled = true;
+      const id = document.getElementById("orcamento-id").value;
+      const payload = { categoriaId: selectCategoria.value, valorLimite: document.getElementById("valorLimite").value };
+      try {
+        if (id) await Api.atualizarOrcamento(id, payload);
+        else await Api.criarOrcamento(payload);
+        fecharFormulario();
+        await carregarLista();
+      } catch (err) {
+        if (err.status === 422 || err.status === 409) mostrarErrosCampos(form, err.body.campos || {});
+        else mostrarErro(erroGeral, err.message);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    carregarLista();
+  </script>
+</body>
+</html>
