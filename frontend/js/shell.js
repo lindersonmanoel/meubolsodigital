@@ -48,7 +48,7 @@ function montarShell(paginaAtiva) {
     `
     <div class="app-shell">
       <aside class="app-sidebar" id="app-sidebar">
-        <div class="marca"><img src="assets/images/logo.png" alt=""><span>Meu Bolso Digital</span></div>
+        <div class="marca"><img src="assets/images/logo-icon.png" alt=""><span>Meu Bolso Digital</span></div>
         <nav class="sidebar-nav">${itensHtml}</nav>
         <button type="button" class="btn sidebar-sair" id="btn-sair"><span class="sidebar-icone" aria-hidden="true">${ICONES.sair}</span>Sair</button>
       </aside>
