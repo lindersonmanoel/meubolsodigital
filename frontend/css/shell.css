@@ -275,6 +275,36 @@ table.tabela tbody tr:hover { background: #f8fafc; }
 }
 .painel-formulario .acoes-formulario .btn { width: auto; padding: 10px 20px; }
 
+.instrucoes-instalar details {
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+}
+.instrucoes-instalar summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--azul-escuro);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.instrucoes-instalar summary svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--azul);
+}
+.instrucoes-instalar ol {
+  margin: 10px 0 4px;
+  padding-left: 20px;
+  font-size: 0.9rem;
+  color: var(--texto);
+}
+.instrucoes-instalar li {
+  margin-bottom: 6px;
+}
+
 .spinner-carregando {
   text-align: center;
   padding: 24px;

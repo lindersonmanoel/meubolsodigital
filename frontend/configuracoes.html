@@ -7,6 +7,10 @@
 <link rel="icon" href="assets/images/logo.png">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0d3b66">
+<link rel="apple-touch-icon" href="assets/images/logo.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Meu Bolso">
 <link rel="stylesheet" href="css/global.css">
 <link rel="stylesheet" href="css/layout.css">
 <link rel="stylesheet" href="css/shell.css">
@@ -62,6 +66,73 @@
         </div>
         <button type="submit" class="btn btn-primario" id="btn-trocar-senha" style="width:auto;padding:10px 20px">Trocar senha</button>
       </form>
+    </section>
+
+    <section class="card" style="margin-bottom:20px;max-width:640px" id="cartao-instalar">
+      <h2>Instalar o app</h2>
+      <p class="hint">
+        Instale o Meu Bolso Digital no celular, tablet ou computador pra abrir direto como um
+        aplicativo — com ícone próprio, tela cheia e funcionando mesmo com internet instável.
+        Funciona em Android, iPhone/iPad, Windows e Mac.
+      </p>
+
+      <p class="alerta alerta-sucesso" id="ja-instalado" hidden>Você já está usando o app instalado neste dispositivo.</p>
+      <button type="button" class="btn btn-primario" id="btn-instalar" style="width:auto;padding:10px 20px;margin:4px 0 16px" hidden>
+        Instalar agora
+      </button>
+
+      <div class="instrucoes-instalar" id="instrucoes-instalar">
+        <details id="passo-android">
+          <summary>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            Celular ou tablet Android (Chrome)
+          </summary>
+          <ol>
+            <li>Se aparecer o botão "Instalar agora" acima, é só tocar nele.</li>
+            <li>Se não aparecer: toque nos três pontinhos (⋮) no canto superior direito do Chrome.</li>
+            <li>Toque em <strong>"Instalar aplicativo"</strong> (ou "Adicionar à tela inicial").</li>
+            <li>Confirme. O ícone do Meu Bolso Digital aparece na tela inicial, como um app normal.</li>
+          </ol>
+        </details>
+
+        <details id="passo-ios">
+          <summary>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            iPhone ou iPad (Safari)
+          </summary>
+          <ol>
+            <li>Abra este site no <strong>Safari</strong> (o instalador não funciona no Chrome do iPhone).</li>
+            <li>Toque no ícone de compartilhar (o quadrado com uma seta pra cima), na barra de baixo.</li>
+            <li>Role a lista de opções e toque em <strong>"Adicionar à Tela de Início"</strong>.</li>
+            <li>Toque em "Adicionar" no canto superior direito. Pronto, o ícone fica na tela inicial.</li>
+          </ol>
+        </details>
+
+        <details id="passo-windows">
+          <summary>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            Windows (Chrome ou Edge)
+          </summary>
+          <ol>
+            <li>Se aparecer o botão "Instalar agora" acima, é só clicar nele.</li>
+            <li>Se não aparecer: procure um ícone de instalar (um monitor com uma seta, ⊕ ou similar) do lado direito da barra de endereço.</li>
+            <li>Clique nele e depois em "Instalar".</li>
+            <li>O app abre numa janela própria e ganha um atalho no menu Iniciar.</li>
+          </ol>
+        </details>
+
+        <details id="passo-mac">
+          <summary>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            Mac (Chrome, Edge ou Safari)
+          </summary>
+          <ol>
+            <li><strong>Chrome/Edge:</strong> se aparecer o botão "Instalar agora" acima, clique nele; senão, use o ícone de instalar na barra de endereço.</li>
+            <li><strong>Safari:</strong> no menu, vá em Arquivo → "Adicionar ao Dock" (ou toque no ícone de compartilhar → "Adicionar ao Dock").</li>
+            <li>O app fica com ícone próprio no Dock, como qualquer outro aplicativo do Mac.</li>
+          </ol>
+        </details>
+      </div>
     </section>
 
     <section class="card" style="max-width:520px">
@@ -155,6 +226,43 @@
       Sessao.encerrar();
       window.location.href = "login.html";
     });
+
+    // Instalar o app (PWA): abre primeiro a instrucao certa pra plataforma detectada, e
+    // liga o botao de instalar quando o navegador oferecer o instalador nativo (nem todo
+    // navegador oferece - por isso as instrucoes manuais continuam disponiveis sempre).
+    (function configurarInstalador() {
+      const btnInstalar = document.getElementById("btn-instalar");
+      const avisoInstalado = document.getElementById("ja-instalado");
+      const mapaPlataforma = { android: "passo-android", ios: "passo-ios", desktop: "passo-windows", mac: "passo-mac" };
+      const idDaPagina = mapaPlataforma[Instalador.plataforma()];
+      if (idDaPagina) {
+        const detalhe = document.getElementById(idDaPagina);
+        if (detalhe) detalhe.open = true;
+      }
+
+      if (Instalador.jaInstalado()) {
+        avisoInstalado.hidden = false;
+        document.getElementById("instrucoes-instalar").hidden = true;
+      }
+
+      function atualizarBotao() {
+        btnInstalar.hidden = !Instalador.disponivel();
+      }
+      atualizarBotao();
+      document.addEventListener("mbd:instalar-disponivel", atualizarBotao);
+      document.addEventListener("mbd:instalado", () => {
+        btnInstalar.hidden = true;
+        avisoInstalado.hidden = false;
+        document.getElementById("instrucoes-instalar").hidden = true;
+      });
+
+      btnInstalar.addEventListener("click", async () => {
+        btnInstalar.disabled = true;
+        await Instalador.instalar();
+        btnInstalar.disabled = false;
+        atualizarBotao();
+      });
+    })();
   </script>
 </body>
 </html>

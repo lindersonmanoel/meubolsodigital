@@ -3,6 +3,7 @@
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
+const compression = require("compression");
 const morgan = require("morgan");
 const config = require("./config");
 const authRoutes = require("./routes/auth.routes");
@@ -48,6 +49,7 @@ function createApp() {
 
   app.disable("x-powered-by");
   app.use(helmet());
+  app.use(compression()); // comprime as respostas (json e o csv exportado ficam bem menores)
   app.use(
     cors({
       origin: corsOrigin,
