@@ -22,6 +22,10 @@ Sem Supabase: toda comunicação entre o frontend e o banco passa pela API do ba
 - **Conta e sessão**: cadastro, login com token JWT, sessão no navegador, trocar nome/e-mail,
   trocar senha, foto de perfil (recortada/redimensionada no navegador antes de enviar,
   guardada como base64 no banco - sem serviço de armazenamento externo) e bio curta.
+- **Backup e restauração**: baixe um arquivo `.json` com tudo que você cadastrou
+  (categorias, movimentações, metas, orçamentos, recorrências) e restaure depois - útil se
+  perder dados por engano. Restaurar nunca apaga o que já existe (categorias repetidas são
+  reaproveitadas pelo nome; o resto é adicionado).
 - **Categorias**: criar, editar e excluir, separadas por tipo (receita/despesa). Não deixa
   duplicar nome+tipo, nem trocar o tipo de uma categoria que já tem movimentação, recorrência
   ou orçamento ligados a ela (evita dado inconsistente).
@@ -98,7 +102,7 @@ MeuBolsoDigital/
 │   │   ├── app.js             monta o Express (usado pelos testes, sem abrir porta)
 │   │   ├── config.js          lê e valida as variáveis de ambiente
 │   │   └── server.js          ponto de entrada (sobe o servidor de verdade)
-│   ├── tests/                 Jest + Supertest (97 testes)
+│   ├── tests/                 Jest + Supertest (103 testes)
 │   ├── .env.example
 │   └── package.json
 ├── database/migrations/      SQL versionado (001_init.sql: usuários/categorias/movimentações/
@@ -126,6 +130,7 @@ Tudo debaixo de `/api`, autenticado com `Authorization: Bearer <token>` (exceto 
 | Recorrências | `GET/POST /recorrencias`, `PUT/DELETE /recorrencias/:id` |
 | Orçamentos | `GET/POST /orcamentos`, `PUT/DELETE /orcamentos/:id` |
 | Metas | `GET/POST /metas`, `PUT/DELETE /metas/:id` |
+| Backup | `GET /backup` (baixa tudo em .json), `POST /backup/restaurar` (importa um arquivo de backup) |
 | Dashboard | `GET /dashboard/resumo`, `GET /dashboard/graficos` |
 | Relatórios | `GET /relatorios`, `GET /relatorios/exportar` (CSV), `GET /relatorios/exportar-excel` (.xlsx completo, várias abas) |
 | Saúde | `GET /health` *(sem token)* |

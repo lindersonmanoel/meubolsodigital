@@ -100,6 +100,10 @@ const Api = (function () {
     atualizarOrcamento: (id, payload) => request(`/orcamentos/${id}`, { method: "PUT", body: payload, autenticado: true }),
     removerOrcamento: (id) => request(`/orcamentos/${id}`, { method: "DELETE", autenticado: true }),
 
+    // Backup e restauração (tudo cadastrado, num arquivo .json)
+    urlBackup: () => `${window.API_BASE_URL}/backup`,
+    restaurarBackup: (dados) => request("/backup/restaurar", { method: "POST", body: dados, autenticado: true }),
+
     // Exportação (baixa o arquivo direto, autenticando via token na URL nao e' preciso pq
     // usamos <a download> com blob - ver urlExportar)
     urlExportarMovimentacoes: (base, filtros) => `${window.API_BASE_URL}/${base}/exportar${montarQuery(filtros)}`,

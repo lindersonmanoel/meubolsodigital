@@ -3,8 +3,17 @@
 const service = require("../services/movimentacao.service");
 const { paraCsv } = require("../utils/csv");
 const { gerarExcelMovimentacoes } = require("../utils/excel");
+const { paraDataISO } = require("../utils/datas");
 
 const TITULOS_POR_TIPO = { receita: "Receitas", despesa: "Despesas", null: "Movimentações" };
+
+/** O pg devolve a coluna "data" como objeto Date do JS - se passar direto pro CSV/Excel,
+ * vira texto tipo "Thu Mar 05 2026 00:00:00 GMT...". Normaliza pra "AAAA-MM-DD" antes de
+ * exportar (o JSON normal da listagem nao tem esse problema: o JSON.stringify converte
+ * Date sozinho, e o frontend ja corta pros 10 primeiros caracteres). */
+function comDataFormatada(itens) {
+  return itens.map((item) => ({ ...item, data: paraDataISO(item.data) }));
+}
 
 const COLUNAS_CSV = [
   { chave: "data", rotulo: "Data" },
@@ -53,7 +62,7 @@ function build(tipoFixo) {
     },
     async exportarCsv(req, res, next) {
       try {
-        const itens = await service.listar(req.usuarioId, req.query, { tipoFixo });
+        const itens = comDataFormatada(await service.listar(req.usuarioId, req.query, { tipoFixo }));
         const csv = paraCsv(itens, COLUNAS_CSV);
         res.setHeader("Content-Type", "text/csv; charset=utf-8");
         res.setHeader("Content-Disposition", `attachment; filename="movimentacoes.csv"`);
@@ -64,7 +73,7 @@ function build(tipoFixo) {
     },
     async exportarExcel(req, res, next) {
       try {
-        const itens = await service.listar(req.usuarioId, req.query, { tipoFixo });
+        const itens = comDataFormatada(await service.listar(req.usuarioId, req.query, { tipoFixo }));
         const titulo = TITULOS_POR_TIPO[tipoFixo] || TITULOS_POR_TIPO.null;
         const buffer = await gerarExcelMovimentacoes(itens, titulo);
         res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");

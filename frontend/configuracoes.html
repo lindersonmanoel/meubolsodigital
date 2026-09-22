@@ -64,6 +64,35 @@
       </form>
     </section>
 
+    <section class="card" style="margin-bottom:20px;max-width:640px" id="cartao-backup">
+      <h2>Backup e restauração</h2>
+      <p class="hint">
+        Baixe uma cópia de tudo que você cadastrou (categorias, receitas, despesas, metas,
+        orçamentos e recorrências) e guarde esse arquivo num lugar seguro. Se um dia perder
+        dados por engano, é só restaurar esse arquivo pra recuperar tudo.
+      </p>
+
+      <p class="alerta alerta-erro" id="erro-backup" hidden></p>
+      <p class="alerta alerta-sucesso" id="sucesso-backup" hidden></p>
+
+      <button type="button" class="btn btn-primario" id="btn-baixar-backup" style="width:auto;padding:10px 18px;margin-bottom:20px">
+        Baixar backup completo
+      </button>
+
+      <div style="border-top:1px solid var(--borda);padding-top:16px">
+        <label for="input-restaurar">Restaurar de um arquivo de backup</label>
+        <input type="file" id="input-restaurar" accept="application/json,.json" style="margin-bottom:8px">
+        <p class="hint" style="margin-bottom:12px">
+          Isso <strong>adiciona</strong> os dados desse arquivo à sua conta atual — não apaga
+          nada que já existe. Se restaurar o mesmo backup duas vezes, as movimentações ficam
+          duplicadas (categorias repetidas não duplicam).
+        </p>
+        <button type="button" class="btn btn-secundario" id="btn-restaurar-backup" style="width:auto;padding:10px 18px" disabled>
+          Restaurar backup
+        </button>
+      </div>
+    </section>
+
     <section class="card" style="margin-bottom:20px;max-width:520px">
       <h2>Trocar senha</h2>
       <p class="alerta alerta-erro" id="erro-senha" hidden></p>
@@ -285,6 +314,66 @@
         else mostrarErro(erroPerfil, err.message);
       } finally {
         btn.disabled = false;
+      }
+    });
+
+    // Backup e restauração
+    const erroBackup = document.getElementById("erro-backup");
+    const sucessoBackup = document.getElementById("sucesso-backup");
+    const inputRestaurar = document.getElementById("input-restaurar");
+    const btnRestaurarBackup = document.getElementById("btn-restaurar-backup");
+    let textoBackupEscolhido = null;
+
+    document.getElementById("btn-baixar-backup").addEventListener("click", async (e) => {
+      const btn = e.currentTarget;
+      btn.disabled = true;
+      mostrarErro(erroBackup, "");
+      mostrarErro(sucessoBackup, "");
+      try {
+        await Api.baixarCsv(Api.urlBackup(), "backup-meu-bolso-digital.json");
+      } catch (err) {
+        mostrarErro(erroBackup, err.message);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    inputRestaurar.addEventListener("change", async () => {
+      mostrarErro(erroBackup, "");
+      mostrarErro(sucessoBackup, "");
+      const arquivo = inputRestaurar.files[0];
+      textoBackupEscolhido = null;
+      btnRestaurarBackup.disabled = true;
+      if (!arquivo) return;
+      try {
+        textoBackupEscolhido = await arquivo.text();
+        btnRestaurarBackup.disabled = false;
+      } catch (err) {
+        mostrarErro(erroBackup, "Não consegui ler esse arquivo.");
+      }
+    });
+
+    btnRestaurarBackup.addEventListener("click", async () => {
+      if (!textoBackupEscolhido) return;
+      if (!confirm("Isso vai adicionar os dados desse arquivo à sua conta atual (não apaga o que já existe). Continuar?")) return;
+      mostrarErro(erroBackup, "");
+      mostrarErro(sucessoBackup, "");
+      btnRestaurarBackup.disabled = true;
+      try {
+        const dados = JSON.parse(textoBackupEscolhido);
+        const { resultado } = await Api.restaurarBackup(dados);
+        mostrarErro(
+          sucessoBackup,
+          `Backup restaurado: ${resultado.categorias} categorias, ${resultado.movimentacoes} movimentações, ` +
+            `${resultado.metas} metas, ${resultado.orcamentos} orçamentos e ${resultado.recorrencias} recorrências.`
+        );
+        inputRestaurar.value = "";
+        textoBackupEscolhido = null;
+      } catch (err) {
+        if (err instanceof SyntaxError) mostrarErro(erroBackup, "Esse arquivo não é um backup válido (JSON inválido).");
+        else mostrarErro(erroBackup, err.message);
+      } finally {
+        btnRestaurarBackup.disabled = !textoBackupEscolhido;
       }
     });
 

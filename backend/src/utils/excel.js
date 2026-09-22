@@ -1,6 +1,7 @@
 "use strict";
 
 const ExcelJS = require("exceljs");
+const { paraDataBR } = require("./datas");
 
 const COR_CABECALHO = "FF0D3B66";
 const COR_RECEITA = "FF1FA974";
@@ -40,7 +41,7 @@ function planilhaMovimentacoes(workbook, titulo, movimentacoes) {
 
   movimentacoes.forEach((m) => {
     const linha = planilha.addRow({
-      data: formatarDataBR(m.data),
+      data: paraDataBR(m.data),
       tipo: m.tipo === "receita" ? "Receita" : "Despesa",
       descricao: m.descricao,
       categoria_nome: m.categoria_nome || "Sem categoria",
@@ -55,12 +56,6 @@ function planilhaMovimentacoes(workbook, titulo, movimentacoes) {
   autoLargura(planilha);
   planilha.views = [{ state: "frozen", ySplit: 1 }];
   return planilha;
-}
-
-function formatarDataBR(iso) {
-  if (!iso) return "";
-  const [ano, mes, dia] = String(iso).slice(0, 10).split("-");
-  return `${dia}/${mes}/${ano}`;
 }
 
 /** Gera um .xlsx so' com as movimentacoes (usado por /movimentacoes|receitas|despesas/exportar-excel). */
@@ -146,7 +141,7 @@ async function gerarExcelRelatorioCompleto({ periodo, resumo, movimentacoes, des
         valor_atual: Number(m.valor_atual),
         valor_objetivo: Number(m.valor_objetivo),
         progresso: m.progresso / 100,
-        prazo: formatarDataBR(m.prazo),
+        prazo: paraDataBR(m.prazo),
       });
       linha.getCell("valor_atual").numFmt = '"R$" #,##0.00';
       linha.getCell("valor_objetivo").numFmt = '"R$" #,##0.00';

@@ -1,6 +1,7 @@
 "use strict";
 
 const request = require("supertest");
+const ExcelJS = require("exceljs");
 const createApp = require("../src/app");
 const pool = require("../src/database/pool");
 const { criarUsuarioAutenticado } = require("./helpers");
@@ -154,6 +155,29 @@ describe("movimentacoes", () => {
       expect(res.status).toBe(200);
       expect(res.headers["content-type"]).toBe("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
       expect(res.headers["content-disposition"]).toContain(".xlsx");
+    });
+
+    test("data vem formatada certinho no CSV e no Excel (nao o formato verboso do Date do JS)", async () => {
+      const { headers } = await criarUsuarioAutenticado(app);
+      await request(app).post("/api/movimentacoes").set(headers).send({
+        tipo: "despesa", descricao: "Teste de data", valor: 10, data: "2026-01-10",
+      });
+
+      const csv = await request(app).get("/api/movimentacoes/exportar").set(headers);
+      expect(csv.text).toContain("2026-01-10");
+      expect(csv.text).not.toMatch(/GMT|Thu |Fri |Mon |Tue |Wed |Sat |Sun /);
+
+      const excel = await request(app).get("/api/movimentacoes/exportar-excel").set(headers).buffer(true).parse((res, callback) => {
+        res.setEncoding("binary");
+        let dados = "";
+        res.on("data", (chunk) => { dados += chunk; });
+        res.on("end", () => callback(null, Buffer.from(dados, "binary")));
+      });
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.load(excel.body);
+      const planilha = workbook.worksheets[0];
+      const valorCelula = planilha.getRow(2).getCell(1).value;
+      expect(valorCelula).toBe("10/01/2026");
     });
 
     test("POST /api/receitas força o tipo, mesmo se o corpo mandar outro", async () => {
