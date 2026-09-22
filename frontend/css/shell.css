@@ -369,6 +369,80 @@ table.tabela tbody tr:hover { background: #f8fafc; }
   margin-bottom: 6px;
 }
 
+/* Tour guiado: 4 paineis escuros em volta do elemento destacado (formam o "buraco" do
+   holofote) + uma moldura verde nele + um balao de explicacao. */
+.tour-overlay-top, .tour-overlay-bottom, .tour-overlay-left, .tour-overlay-right {
+  position: fixed;
+  background: rgba(8, 42, 74, 0.68);
+  z-index: 200;
+}
+.tour-moldura {
+  position: fixed;
+  z-index: 200;
+  border: 3px solid var(--verde);
+  border-radius: 10px;
+  box-shadow: 0 0 0 4px rgba(31, 169, 116, 0.25);
+  pointer-events: none;
+  transition: top 0.15s, left 0.15s, width 0.15s, height 0.15s;
+}
+.tour-balao {
+  position: fixed;
+  z-index: 201;
+  width: 320px;
+  max-width: calc(100vw - 24px);
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+}
+.tour-balao-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.tour-balao-topo strong {
+  color: var(--azul-escuro);
+  font-size: 1.05rem;
+}
+.tour-balao p {
+  margin: 0 0 14px;
+  font-size: 0.92rem;
+  color: var(--texto);
+}
+.tour-balao-acoes {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.app-topbar-direita {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-ajuda-tour {
+  background: none;
+  border: 1px solid var(--borda);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--azul-escuro);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.btn-ajuda-tour:hover {
+  background: var(--bg);
+}
+
 .spinner-carregando {
   text-align: center;
   padding: 24px;

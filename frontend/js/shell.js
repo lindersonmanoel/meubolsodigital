@@ -56,7 +56,10 @@ function montarShell(paginaAtiva) {
       <div class="app-main">
         <header class="app-topbar">
           <button type="button" class="app-menu-btn" id="btn-menu" aria-label="Abrir menu">${ICONES.menu}</button>
-          <span class="hint" id="saudacao">${cache ? cache.email : ""}</span>
+          <div class="app-topbar-direita">
+            <span class="hint" id="saudacao">${cache ? cache.email : ""}</span>
+            <button type="button" class="btn-ajuda-tour" id="btn-ajuda" title="Fazer um tour guiado pelo site" aria-label="Fazer um tour guiado pelo site">?</button>
+          </div>
         </header>
         <main class="app-conteudo" id="app-conteudo"></main>
       </div>
@@ -94,6 +97,11 @@ function montarShell(paginaAtiva) {
   });
   backdrop.addEventListener("click", fecharMenu);
   sidebar.querySelectorAll(".sidebar-link").forEach((link) => link.addEventListener("click", fecharMenu));
+
+  document.getElementById("btn-ajuda").addEventListener("click", () => {
+    if (typeof Tour !== "undefined") Tour.iniciar();
+  });
+  if (typeof Tour !== "undefined") Tour.verificarAoCarregar();
 
   // Confere com o servidor que o token ainda e valido (pode ter expirado ou sido revogado).
   Api.me()
