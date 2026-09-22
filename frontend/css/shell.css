@@ -275,6 +275,44 @@ table.tabela tbody tr:hover { background: #f8fafc; }
 }
 .painel-formulario .acoes-formulario .btn { width: auto; padding: 10px 20px; }
 
+.faixa-instalar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--card-bg);
+  border: 1px solid var(--verde);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.icone-faixa-instalar {
+  width: 26px;
+  height: 26px;
+  color: var(--verde);
+  flex-shrink: 0;
+}
+.texto-faixa-instalar {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 180px;
+}
+.fechar-faixa-instalar {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--dim);
+  padding: 4px;
+  display: inline-flex;
+  margin-left: auto;
+}
+.fechar-faixa-instalar svg {
+  width: 18px;
+  height: 18px;
+}
+
 .instrucoes-instalar details {
   border: 1px solid var(--borda);
   border-radius: 10px;
