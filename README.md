@@ -87,6 +87,10 @@ MeuBolsoDigital/
 │   └── package.json
 ├── database/migrations/   SQL versionado (001_init.sql cria as 4 tabelas)
 ├── docker-compose.yml     PostgreSQL local pra desenvolvimento/teste
+├── Dockerfile             imagem de produção do backend (usada pelo Railway hoje)
+├── docker-compose.prod.yml   stack alternativa pra VM própria (Postgres + backend + Cloudflare Tunnel)
+├── .env.production.example   modelo de variáveis pra essa stack alternativa
+├── DEPLOY.md              roteiro da stack alternativa (VM + Docker + Cloudflare Tunnel)
 └── README.md
 ```
 
@@ -211,11 +215,15 @@ variáveis obrigatórias preenchidas, o servidor recusa iniciar.
   (`${{Postgres.DATABASE_URL}}`) e `JWT_SECRET` gerado só pra produção.
 - **Domínio**: por decisão do projeto, ficou nos endereços padrão (`*.vercel.app` e
   `*.up.railway.app`), sem domínio próprio por enquanto.
-- **Atualizar o deploy depois de mudar o código**:
+- **Atualizar o deploy depois de mudar o código**: o normal é só `git push` (Vercel e Railway
+  têm deploy automático a cada push). Pra forçar manualmente sem esperar o push:
   ```bash
-  cd backend && npx @railway/cli up --service backend --detach   # backend
-  cd ../frontend && npx vercel --prod --yes                       # frontend (ou so' git push, o deploy automatico cuida disso)
+  npx @railway/cli up --service backend --detach   # backend, roda de qualquer pasta do repo
+  npx vercel --prod --yes                          # frontend - roda da RAIZ do repositório
   ```
+  Importante: o deploy manual do frontend precisa rodar da raiz do projeto (não de dentro de
+  `frontend/`), porque o Root Directory já está configurado como `frontend` no projeto Vercel -
+  rodar de dentro da pasta duplicaria o caminho e o build não encontra os arquivos.
 - **Migração em produção** (só quando uma migração nova for adicionada em
   `database/migrations/`): como o Postgres do Railway só tem rede interna, crie um proxy TCP
   temporário, rode a migração local apontando pra ele e depois apague o proxy:
