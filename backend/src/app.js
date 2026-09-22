@@ -36,6 +36,14 @@ function corsOrigin(origin, callback) {
 function createApp() {
   const app = express();
 
+  // Em produção a API roda atrás de um proxy (Railway, Cloudflare Tunnel etc.): sem isso,
+  // o express-rate-limit rejeita toda requisição por causa do cabeçalho X-Forwarded-For
+  // (ERR_ERL_UNEXPECTED_X_FORWARDED_FOR) e req.ip fica errado (sempre o IP do proxy).
+  // "1" confia só no primeiro salto (o proxy imediatamente na frente), não a cadeia toda.
+  if (config.isProduction) {
+    app.set("trust proxy", 1);
+  }
+
   app.disable("x-powered-by");
   app.use(helmet());
   app.use(

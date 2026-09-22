@@ -22,8 +22,17 @@ cada etapa antes de avançar para a próxima.
 | 6 | Relatórios | Pronta |
 | 7 | PWA (instalação, ícone, modo offline) | Pronta |
 | 8 | Segurança adicional (revisão de permissões) | Parcial (veja abaixo) |
-| 9 | Deploy (Vercel, backend, banco, domínio) | Não iniciada (aguardando autorização pra publicar) |
-| 10 | Testes finais de tudo | Parcial (68 testes automatizados + fluxo completo verificado) |
+| 9 | Deploy (Vercel, backend, banco, domínio) | Pronta (veja "No ar" abaixo) |
+| 10 | Testes finais de tudo | Parcial (68 testes automatizados + fluxo completo verificado em produção) |
+
+## No ar
+
+- **App**: https://meu-bolso-digital-web.vercel.app
+- **API**: https://backend-production-827d.up.railway.app/api (Railway; não acesse direto, é só pro frontend)
+- Frontend na Vercel (conta `lindersonmanoel`, deploy automático a cada push no GitHub).
+  Backend + PostgreSQL no Railway (mesma conta), no plano gratuito de créditos - sem domínio
+  próprio por enquanto (ficou combinado usar só os endereços padrão da Vercel/Railway).
+- Repositório: https://github.com/lindersonmanoel/meubolsodigital
 
 ## O que já está entregue (Fases 1 a 7)
 
@@ -190,28 +199,51 @@ variáveis obrigatórias preenchidas, o servidor recusa iniciar.
   de ponta a ponta (a Vercel já entrega isso no frontend; o backend precisa de um provedor
   com HTTPS ou um proxy reverso na frente) e revisão de permissões antes de cada nova fase.
 
-## Deploy (quando a Fase 9 chegar)
+## Deploy (como está publicado hoje)
 
-- **Frontend**: repositório no GitHub → projeto na Vercel com **Root Directory = `frontend`**
-  (é aí que fica o `vercel.json` com os cabeçalhos de segurança) → deploy automático a cada
-  push. Antes de publicar, edite `frontend/js/config.js` com o endereço real do backend.
-- **Backend**: a Vercel não é feita pra hospedar um servidor Express com conexão persistente
-  a banco; use um provedor de Node.js (Render, Railway, Fly.io) ou uma VM sua com Docker
-  (o padrão já usado nos outros projetos: Docker + Cloudflare Tunnel, nunca a porta aberta
-  direto na internet). Configure lá as mesmas variáveis de ambiente do `.env`, com um
-  `JWT_SECRET` novo e forte, e um `FRONTEND_URL` apontando pro domínio real da Vercel.
-- **Banco**: um PostgreSQL gerenciado (Neon, Railway, RDS) ou o Postgres da sua própria VM.
-  Rode `npm run migrate` uma vez contra o banco de produção antes do primeiro deploy.
+- **Frontend**: repositório no GitHub (`lindersonmanoel/meubolsodigital`) → projeto na Vercel
+  com **Root Directory = `frontend`** (é aí que fica o `vercel.json` com os cabeçalhos de
+  segurança) → deploy automático a cada push na branch principal.
+- **Backend + banco**: Railway (projeto `meu-bolso-digital`), dois serviços - `backend`
+  (builda pelo `Dockerfile` da raiz do repositório) e `Postgres` (na rede interna do Railway,
+  sem porta pública exposta). Variáveis de ambiente configuradas direto no serviço `backend`
+  (`railway variables --service backend`), com `DATABASE_URL` referenciando o Postgres
+  (`${{Postgres.DATABASE_URL}}`) e `JWT_SECRET` gerado só pra produção.
+- **Domínio**: por decisão do projeto, ficou nos endereços padrão (`*.vercel.app` e
+  `*.up.railway.app`), sem domínio próprio por enquanto.
+- **Atualizar o deploy depois de mudar o código**:
+  ```bash
+  cd backend && npx @railway/cli up --service backend --detach   # backend
+  cd ../frontend && npx vercel --prod --yes                       # frontend (ou so' git push, o deploy automatico cuida disso)
+  ```
+- **Migração em produção** (só quando uma migração nova for adicionada em
+  `database/migrations/`): como o Postgres do Railway só tem rede interna, crie um proxy TCP
+  temporário, rode a migração local apontando pra ele e depois apague o proxy:
+  ```bash
+  npx @railway/cli tcp-proxy create --port 5432 --service Postgres --json
+  # copie host/porta do retorno pro DATABASE_URL abaixo (senha igual a do Postgres)
+  cd backend
+  $env:DATABASE_URL = "postgresql://postgres:SENHA@HOST:PORTA/railway"; $env:DATABASE_SSL = "true"
+  node src/database/migrate.js
+  npx @railway/cli tcp-proxy delete <id-do-proxy> --service Postgres --yes
+  ```
+
+Uma alternativa que fica documentada mas não foi usada nesta publicação (padrão dos outros
+projetos, pra quando fizer sentido migrar pra infraestrutura própria): backend numa VM com
+Docker + Cloudflare Tunnel, usando `Dockerfile`, `docker-compose.prod.yml` e o roteiro
+completo em [`DEPLOY.md`](DEPLOY.md).
 
 ## Próximos passos
 
-Com as Fases 1 a 7 entregues (auth, receitas/despesas/categorias/movimentações, dashboard,
-metas, relatórios e PWA), falta:
+Com as Fases 1 a 9 entregues (auth, receitas/despesas/categorias/movimentações, dashboard,
+metas, relatórios, PWA e deploy), falta:
 
-- **Fase 8**: uma nova revisão de segurança agora que existem mais rotas autenticadas (já
-  seguem o mesmo padrão de isolamento por `usuario_id` das rotas anteriores, mas vale conferir
-  de novo antes do deploy).
-- **Fase 9**: deploy de verdade (Vercel + backend numa VM/provedor + banco gerenciado) -
-  combinado no projeto que isso só acontece quando pedido explicitamente, pra evitar expor
-  uma API com custo antes da hora.
-- **Fase 10**: testes finais depois do deploy, contra o ambiente de produção.
+- **Fase 8** (rótulo do documento original, mas cabe revisitar periodicamente): uma nova
+  revisão de segurança agora que existem mais rotas autenticadas (já seguem o mesmo padrão de
+  isolamento por `usuario_id` das rotas anteriores, mas vale conferir de novo de tempos em
+  tempos, sobretudo antes de expor a um público maior ou trocar pra domínio próprio).
+- **Fase 10**: mais testes automatizados cobrindo o ambiente de produção (hoje o fluxo
+  completo já foi verificado manualmente contra o Railway/Vercel reais, mas ainda não faz
+  parte da suíte automatizada do CI).
+- Domínio próprio (`lumvix.com.br` ou outro) e transferir os projetos Vercel/Railway pra
+  conta definitiva, se um dia fizer sentido sair dos endereços padrão.

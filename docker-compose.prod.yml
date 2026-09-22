@@ -1,0 +1,43 @@
+# Stack de producao: Postgres + backend + Cloudflare Tunnel, tudo na mesma rede Docker
+# interna. Nenhuma porta vai pro host (nem 5432 nem 3000) - o unico jeito de chegar no
+# backend de fora e' pelo tunnel, que nao abre porta nenhuma no firewall da VM.
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: meu-bolso-digital-db-prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mbd
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env.production}
+      POSTGRES_DB: meu_bolso_digital
+    volumes:
+      - mbd_pgdata_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mbd -d meu_bolso_digital"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: meu-bolso-digital-api-prod
+    restart: unless-stopped
+    env_file: .env.production
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: meu-bolso-digital-tunnel
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?defina CLOUDFLARE_TUNNEL_TOKEN no .env.production}
+    depends_on:
+      - backend
+
+volumes:
+  mbd_pgdata_prod:
