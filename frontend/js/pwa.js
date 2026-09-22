@@ -53,5 +53,84 @@ const Instalador = (function () {
     return "desktop";
   }
 
-  return { disponivel, jaInstalado, instalar, plataforma };
+  const ICONE_CELULAR =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>';
+  const ICONE_MONITOR =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>';
+
+  const INSTRUCOES = {
+    android: { titulo: `${ICONE_CELULAR} Celular/tablet Android (Chrome)`, passos: ['Toque nos três pontinhos (⋮) no canto superior direito do Chrome.', 'Toque em "Instalar aplicativo" (ou "Adicionar à tela inicial").', "Confirme - o ícone aparece na tela inicial."] },
+    ios: { titulo: `${ICONE_CELULAR} iPhone/iPad (Safari)`, passos: ["Abra este site no Safari (não funciona no Chrome do iPhone).", "Toque no ícone de compartilhar (quadrado com seta pra cima).", 'Role e toque em "Adicionar à Tela de Início", depois em "Adicionar".'] },
+    desktop: { titulo: `${ICONE_MONITOR} Windows (Chrome/Edge)`, passos: ["Clique no ícone de instalar na barra de endereço (um monitor com seta, ou ⊕).", 'Clique em "Instalar". O app abre numa janela própria.'] },
+    mac: { titulo: `${ICONE_MONITOR} Mac (Chrome/Edge/Safari)`, passos: ["Chrome/Edge: use o ícone de instalar na barra de endereço.", 'Safari: menu Arquivo → "Adicionar ao Dock".'] },
+  };
+
+  function htmlInstrucoes() {
+    const ordem = [plataforma(), ...Object.keys(INSTRUCOES).filter((p) => p !== plataforma())];
+    return ordem
+      .map((chave, i) => {
+        const info = INSTRUCOES[chave];
+        return `<details${i === 0 ? " open" : ""}><summary>${info.titulo}</summary><ol>${info.passos.map((p) => `<li>${p}</li>`).join("")}</ol></details>`;
+      })
+      .join("");
+  }
+
+  /** Monta a faixa "instale o app" dentro do elemento informado. Funciona em qualquer
+   * pagina, logada ou nao (login/cadastro inclusive) - as instrucoes ficam embutidas ali
+   * mesmo, sem depender de nenhuma outra pagina. */
+  function montarFaixa(container) {
+    if (!container || jaInstalado()) return;
+    try {
+      if (localStorage.getItem("mbd_faixa_instalar_fechada") === "1") return;
+    } catch (e) {
+      /* sem localStorage, mostra a faixa mesmo assim */
+    }
+
+    const faixa = document.createElement("section");
+    faixa.className = "faixa-instalar";
+    faixa.innerHTML = `
+      <div class="faixa-instalar-linha">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icone-faixa-instalar"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <div class="texto-faixa-instalar">
+          <strong>Instale o Meu Bolso Digital</strong>
+          <span class="hint">Abre mais rápido, com ícone próprio, no celular ou computador.</span>
+        </div>
+        <button type="button" class="btn btn-primario" data-acao="instalar" style="width:auto;padding:8px 16px" hidden>Instalar agora</button>
+        <button type="button" class="btn btn-secundario" data-acao="como-instalar" style="width:auto;padding:8px 16px">Como instalar</button>
+        <button type="button" class="fechar-faixa-instalar" aria-label="Fechar aviso de instalação" data-acao="fechar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="instrucoes-instalar" data-painel-instrucoes hidden>${htmlInstrucoes()}</div>
+    `;
+    container.prepend(faixa);
+
+    const btnInstalar = faixa.querySelector('[data-acao="instalar"]');
+    btnInstalar.hidden = !disponivel();
+    document.addEventListener("mbd:instalar-disponivel", () => { btnInstalar.hidden = false; });
+    document.addEventListener("mbd:instalado", () => faixa.remove());
+
+    btnInstalar.addEventListener("click", async () => {
+      btnInstalar.disabled = true;
+      const resultado = await instalar();
+      btnInstalar.disabled = false;
+      if (resultado === "accepted") faixa.remove();
+    });
+
+    const painel = faixa.querySelector("[data-painel-instrucoes]");
+    faixa.querySelector('[data-acao="como-instalar"]').addEventListener("click", () => {
+      painel.hidden = !painel.hidden;
+    });
+
+    faixa.querySelector('[data-acao="fechar"]').addEventListener("click", () => {
+      faixa.remove();
+      try {
+        localStorage.setItem("mbd_faixa_instalar_fechada", "1");
+      } catch (e) {
+        /* nada a fazer */
+      }
+    });
+  }
+
+  return { disponivel, jaInstalado, instalar, plataforma, montarFaixa };
 })();

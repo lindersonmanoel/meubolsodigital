@@ -28,18 +28,7 @@
 
     <p class="alerta alerta-erro" id="erro-geral" hidden></p>
 
-    <section class="faixa-instalar" id="faixa-instalar" hidden>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icone-faixa-instalar"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      <div class="texto-faixa-instalar">
-        <strong>Instale o Meu Bolso Digital no seu dispositivo</strong>
-        <span class="hint">Abre mais rápido, com ícone próprio e funciona mesmo offline.</span>
-      </div>
-      <button type="button" class="btn btn-primario" id="btn-instalar-faixa" style="width:auto;padding:8px 16px" hidden>Instalar agora</button>
-      <a href="configuracoes.html" class="btn btn-secundario" id="link-como-instalar" style="width:auto;padding:8px 16px;text-decoration:none">Como instalar</a>
-      <button type="button" class="fechar-faixa-instalar" id="btn-fechar-faixa" aria-label="Fechar aviso de instalação">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </section>
+    <div id="local-faixa-instalar"></div>
 
     <section class="grade-cartoes">
       <div class="cartao-metrica">
@@ -152,40 +141,7 @@
     }
 
     carregar();
-
-    // Faixa "instale o app" na tela inicial. Some sozinha se ja estiver instalado, ou se a
-    // pessoa fechar (guarda em localStorage pra nao insistir toda vez que ela entra).
-    (function configurarFaixaInstalar() {
-      const CHAVE_FECHADA = "mbd_faixa_instalar_fechada";
-      const faixa = document.getElementById("faixa-instalar");
-      const btnInstalar = document.getElementById("btn-instalar-faixa");
-
-      function fechada() {
-        try { return localStorage.getItem(CHAVE_FECHADA) === "1"; } catch (e) { return false; }
-      }
-      function marcarFechada() {
-        try { localStorage.setItem(CHAVE_FECHADA, "1"); } catch (e) { /* sem localStorage, sem problema */ }
-      }
-
-      if (Instalador.jaInstalado() || fechada()) return;
-      faixa.hidden = false;
-      btnInstalar.hidden = !Instalador.disponivel();
-
-      document.addEventListener("mbd:instalar-disponivel", () => { btnInstalar.hidden = false; });
-      document.addEventListener("mbd:instalado", () => { faixa.hidden = true; });
-
-      btnInstalar.addEventListener("click", async () => {
-        btnInstalar.disabled = true;
-        const resultado = await Instalador.instalar();
-        btnInstalar.disabled = false;
-        if (resultado === "accepted") faixa.hidden = true;
-      });
-
-      document.getElementById("btn-fechar-faixa").addEventListener("click", () => {
-        faixa.hidden = true;
-        marcarFechada();
-      });
-    })();
+    Instalador.montarFaixa(document.getElementById("local-faixa-instalar"));
   </script>
 </body>
 </html>

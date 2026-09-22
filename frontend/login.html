@@ -13,6 +13,7 @@
 <meta name="apple-mobile-web-app-title" content="Meu Bolso">
 <link rel="stylesheet" href="css/global.css">
 <link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/shell.css">
 <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
@@ -21,6 +22,7 @@
       <div class="auth-logo">
         <img src="assets/images/logo.png" alt="Meu Bolso Digital">
       </div>
+      <div id="local-faixa-instalar"></div>
       <section class="card">
         <h1>Entrar</h1>
         <p class="hint">Acesse sua conta para controlar suas finanças.</p>
@@ -51,6 +53,7 @@
   <script src="js/pwa.js"></script>
   <script>
     Sessao.redirecionarSeLogado();
+    Instalador.montarFaixa(document.getElementById("local-faixa-instalar"));
 
     const form = document.getElementById("form-login");
     const erroGeral = document.getElementById("erro-geral");
