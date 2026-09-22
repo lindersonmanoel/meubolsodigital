@@ -7,6 +7,7 @@
 # Dependencias e caches
 node_modules/
 .pytest_cache/
+.vercel/
 
 # Logs
 *.log
