@@ -24,6 +24,8 @@ const Api = (function () {
     return "?" + entradas.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join("&");
   }
 
+  const TIMEOUT_MS = 15000;
+
   async function request(path, { method = "GET", body, autenticado = false } = {}) {
     const headers = { "Content-Type": "application/json" };
     if (autenticado) {
@@ -32,15 +34,27 @@ const Api = (function () {
       headers.Authorization = `Bearer ${token}`;
     }
 
+    // Sem isso, uma rede instavel deixa o fetch pendurado indefinidamente (spinner
+    // eterno) em vez de avisar a pessoa que algo deu errado.
+    const controller = new AbortController();
+    const semResposta = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
     let res;
     try {
       res = await fetch(`${window.API_BASE_URL}${path}`, {
         method,
         headers,
         body: body ? JSON.stringify(body) : undefined,
+        signal: controller.signal,
       });
     } catch (e) {
-      throw new ApiError("Não consegui falar com o servidor. Confira sua internet e tente de novo.", 0, {});
+      const mensagem =
+        e.name === "AbortError"
+          ? "O servidor demorou demais para responder. Tente de novo."
+          : "Não consegui falar com o servidor. Confira sua internet e tente de novo.";
+      throw new ApiError(mensagem, 0, {});
+    } finally {
+      clearTimeout(semResposta);
     }
 
     let data = {};
@@ -51,6 +65,14 @@ const Api = (function () {
     }
 
     if (!res.ok) {
+      // Token expirado/invalido numa rota autenticada: encerra a sessao local e manda
+      // pro login, em vez de deixar a pagina mostrando um erro cru sem saida.
+      if (res.status === 401 && autenticado && typeof Sessao !== "undefined") {
+        Sessao.encerrar();
+        if (!location.pathname.endsWith("login.html")) {
+          window.location.href = "login.html";
+        }
+      }
       throw new ApiError(data.erro || `Erro ${res.status}.`, res.status, data);
     }
     return data;
