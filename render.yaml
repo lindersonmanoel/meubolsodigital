@@ -1,0 +1,31 @@
+# Blueprint do Render: New > Blueprint > escolha este repositorio.
+# Cria a API (Docker) e o Postgres ligados entre si. Ajuste os "plan" conforme o que quiser pagar:
+# web "free" dorme apos ~15 min sem uso (1a requisicao demora); "starter" fica sempre ativo.
+# Confira os nomes/precos dos planos no painel do Render - eles mudam.
+databases:
+  - name: meubolso-db
+    databaseName: meu_bolso_digital
+    user: mbd
+    plan: basic-256mb
+
+services:
+  - type: web
+    name: meubolso-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: meubolso-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        value: https://meu-bolso-digital-web.vercel.app
+      - key: RESEND_API_KEY
+        sync: false

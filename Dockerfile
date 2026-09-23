@@ -16,4 +16,6 @@ ENV NODE_ENV=production
 EXPOSE 3000
 USER node
 
-CMD ["node", "src/server.js"]
+# Aplica migracoes pendentes a cada deploy (idempotente) e sobe a API. ";" e nao "&&" de
+# proposito: se uma migracao falhar, a API antiga continua de pe (o erro fica no log).
+CMD ["sh", "-c", "node src/database/migrate.js; exec node src/server.js"]
