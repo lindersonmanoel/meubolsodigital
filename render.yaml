@@ -1,6 +1,6 @@
 # Blueprint do Render: New > Blueprint > escolha este repositorio.
-# Cria so a API (Docker, plano free). O Postgres fica fora, no Neon (free e sem expirar - o
-# Postgres free do proprio Render expira em ~30 dias): crie o projeto no Neon e cole a
+# Cria so a API (Docker, plano free). O Postgres fica fora: pode ser o do Railway (URL publica via
+# TCP Proxy) ou o Neon (free sem expirar; o free do Render expira em ~30 dias). Cole a
 # connection string (sem pooling) quando o Render pedir DATABASE_URL.
 # Limite do free: a API dorme apos ~15 min sem uso (a 1a requisicao demora ~1 min).
 # Pra deixar sempre ativa, troque "plan: free" por "starter" (pago).
