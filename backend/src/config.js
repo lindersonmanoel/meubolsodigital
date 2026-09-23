@@ -37,6 +37,7 @@ function buildConfig() {
     port: Number(process.env.PORT) || 3000,
     databaseUrl: process.env.DATABASE_URL || "",
     databaseSsl: boolFromEnv(process.env.DATABASE_SSL, false),
+    databaseSslCa: process.env.DATABASE_SSL_CA ? process.env.DATABASE_SSL_CA.replace(/\\n/g, "\n") : "",
     jwtSecret,
     jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
     frontendUrl: process.env.FRONTEND_URL || "http://localhost:5500",

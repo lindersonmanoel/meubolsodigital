@@ -220,6 +220,7 @@ entre si, então precisam rodar em série, não em paralelo).
 | `PORT` | - | Porta da API (padrão 3000) |
 | `DATABASE_URL` | Sim | Conexão com o PostgreSQL |
 | `DATABASE_SSL` | - | `true` se o banco gerenciado exigir SSL |
+| `DATABASE_SSL_CA` | - | Certificado (PEM) da CA do provedor, para validar a conexão SSL com o banco. Sem isso, `DATABASE_SSL=true` conecta sem verificar a cadeia (comum em Railway/Heroku) |
 | `JWT_SECRET` | Sim | Segredo que assina os tokens de login. Gere um valor aleatório forte. |
 | `JWT_EXPIRES_IN` | - | Validade do token (padrão `7d`) |
 | `FRONTEND_URL` | Sim | Endereço do frontend, liberado no CORS |
