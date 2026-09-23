@@ -5,6 +5,8 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const config = require("../config");
 const userModel = require("../models/user.model");
+const categoriaModel = require("../models/categoria.model");
+const { CATEGORIAS_PADRAO } = require("../utils/categoriasPadrao");
 const passwordResetModel = require("../models/passwordReset.model");
 const emailService = require("./email.service");
 const { AppError } = require("../utils/errors");
@@ -33,6 +35,7 @@ async function registrar({ nome, email, senha }) {
 
   const senhaHash = await bcrypt.hash(senha, SALT_ROUNDS);
   const usuario = await userModel.create({ nome, email, senhaHash });
+  if (config.categoriasPadrao) await categoriaModel.criarVarias(usuario.id, CATEGORIAS_PADRAO);
   return usuario;
 }
 

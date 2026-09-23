@@ -35,6 +35,16 @@ async function criar(usuarioId, { nome, tipo }) {
   return rows[0];
 }
 
+async function criarVarias(usuarioId, categorias) {
+  if (!categorias.length) return;
+  await pool.query(
+    `INSERT INTO categorias (usuario_id, nome, tipo)
+       SELECT $1::bigint, c.nome, c.tipo FROM unnest($2::text[], $3::text[]) AS c(nome, tipo)
+       ON CONFLICT DO NOTHING`,
+    [usuarioId, categorias.map((c) => c.nome), categorias.map((c) => c.tipo)]
+  );
+}
+
 async function atualizar(usuarioId, id, { nome, tipo }) {
   const { rows } = await pool.query(
     `UPDATE categorias SET nome = $1, tipo = $2 WHERE usuario_id = $3 AND id = $4
@@ -64,4 +74,4 @@ async function emUso(usuarioId, id) {
   return r.movimentacao || r.recorrencia || r.orcamento;
 }
 
-module.exports = { listar, buscarPorId, existeComNome, criar, atualizar, remover, emUso };
+module.exports = { listar, buscarPorId, existeComNome, criar, criarVarias, atualizar, remover, emUso };

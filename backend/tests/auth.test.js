@@ -66,6 +66,21 @@ describe("POST /api/auth/register", () => {
   });
 });
 
+describe("categorias padrao no cadastro", () => {
+  const config = require("../src/config");
+  beforeAll(() => { config.categoriasPadrao = true; });
+  afterAll(() => { config.categoriasPadrao = false; });
+
+  test("conta nova ja nasce com categorias de despesa e de receita", async () => {
+    await request(app).post("/api/auth/register").send(usuarioValido);
+    const login = await request(app).post("/api/auth/login").send({ email: usuarioValido.email, senha: usuarioValido.senha });
+    const res = await request(app).get("/api/categorias").set("Authorization", `Bearer ${login.body.token}`);
+    const tipos = new Set(res.body.categorias.map((c) => c.tipo));
+    expect(tipos).toEqual(new Set(["despesa", "receita"]));
+    expect(res.body.categorias.map((c) => c.nome)).toEqual(expect.arrayContaining(["Alimentação", "Salário"]));
+  });
+});
+
 describe("POST /api/auth/login", () => {
   beforeEach(async () => {
     await request(app).post("/api/auth/register").send(usuarioValido);

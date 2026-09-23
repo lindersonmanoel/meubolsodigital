@@ -62,7 +62,10 @@
         </thead>
         <tbody id="corpo-tabela"></tbody>
       </table>
-      <p class="vazio" id="lista-vazia" hidden>Você ainda não tem categorias. Crie a primeira acima.</p>
+      <div class="vazio" id="lista-vazia" hidden>
+        <p>Você ainda não tem categorias. Crie a primeira acima ou comece com as mais comuns:</p>
+        <button type="button" class="btn btn-primario" id="btn-padrao">Criar categorias padrão</button>
+      </div>
       <p class="spinner-carregando" id="carregando">Carregando...</p>
     </div>
   </template>
@@ -175,6 +178,34 @@
       } catch (err) {
         if (err.status === 422) mostrarErrosCampos(form, err.body.campos);
         else mostrarErro(erroGeral, err.message);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    const CATEGORIAS_PADRAO = [
+      ["Alimentação", "despesa"], ["Moradia", "despesa"], ["Contas e serviços", "despesa"],
+      ["Transporte", "despesa"], ["Saúde", "despesa"], ["Educação", "despesa"], ["Lazer", "despesa"],
+      ["Compras", "despesa"], ["Outras despesas", "despesa"],
+      ["Salário", "receita"], ["Renda extra", "receita"], ["Investimentos", "receita"], ["Outras receitas", "receita"],
+    ];
+
+    document.getElementById("btn-padrao").addEventListener("click", async (e) => {
+      const btn = e.currentTarget;
+      btn.disabled = true;
+      mostrarErro(erroGeral, "");
+      try {
+        // Uma por vez: se alguma ja existir (409) a proxima segue normalmente.
+        for (const [nome, tipo] of CATEGORIAS_PADRAO) {
+          try {
+            await Api.criarCategoria({ nome, tipo });
+          } catch (err) {
+            if (err.status !== 409) throw err;
+          }
+        }
+        await carregarLista();
+      } catch (err) {
+        mostrarErro(erroGeral, err.message);
       } finally {
         btn.disabled = false;
       }

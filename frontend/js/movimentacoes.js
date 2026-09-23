@@ -31,7 +31,7 @@ function iniciarPaginaMovimentacoes(opcoes) {
     const tipoAtual = tipoFixo || document.getElementById("tipo").value || "despesa";
     const relevantes = categorias.filter((c) => c.tipo === tipoAtual);
     selectCategoria.innerHTML =
-      '<option value="">Sem categoria</option>' +
+      `<option value="">${relevantes.length ? "Sem categoria" : "Sem categoria (crie categorias na aba Categorias)"}</option>` +
       relevantes.map((c) => `<option value="${c.id}">${escaparHtml(c.nome)}</option>`).join("");
 
     if (selectFiltroCategoria) {

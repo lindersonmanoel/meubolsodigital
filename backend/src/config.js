@@ -41,6 +41,8 @@ function buildConfig() {
     jwtSecret,
     jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
     frontendUrl: process.env.FRONTEND_URL || "http://localhost:5500",
+    // Em teste desligado por padrao: os testes criam as proprias categorias e assumem conta vazia.
+    categoriasPadrao: boolFromEnv(process.env.SEED_CATEGORIAS_PADRAO, nodeEnv !== "test"),
     resendApiKey: process.env.RESEND_API_KEY || "",
     emailFrom: process.env.EMAIL_FROM || "Meu Bolso Digital <onboarding@resend.dev>",
   };
