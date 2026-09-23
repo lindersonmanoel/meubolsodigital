@@ -1,9 +1,9 @@
 # Blueprint do Render: New > Blueprint > escolha este repositorio.
-# Blueprint do Render: New > Blueprint > escolha este repositorio.
 # Cria a API (Docker) e o Postgres ligados entre si, ambos no plano free.
 # Limites do free: a API dorme apos ~15 min sem uso (a 1a requisicao demora ~1 min) e o
 # Postgres free expira apos ~30 dias - depois disso e preciso trocar de plano ou recriar.
 # Pra deixar sempre ativa, troque "plan: free" da API por "starter" (pago).
+databases:
   - name: meubolso-db
     databaseName: meu_bolso_digital
     user: mbd
