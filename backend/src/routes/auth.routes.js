@@ -24,9 +24,21 @@ function createAuthLimiter() {
 
 const authLimiter = createAuthLimiter();
 
+// Rota mais restrita que login/cadastro: cada chamada manda um e-mail de verdade
+// (custo e risco de abuso maiores que so' validar credenciais).
+const recuperacaoLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: config.isTest ? 1000 : 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { erro: "Muitas tentativas. Aguarde alguns minutos e tente de novo." },
+});
+
 router.post("/register", authLimiter, controller.register);
 router.post("/login", authLimiter, controller.login);
 router.post("/logout", controller.logout);
+router.post("/esqueci-senha", recuperacaoLimiter, controller.esqueciSenha);
+router.post("/redefinir-senha", authLimiter, controller.redefinirSenha);
 router.get("/me", requireAuth, controller.me);
 
 module.exports = router;

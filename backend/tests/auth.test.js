@@ -3,6 +3,7 @@
 const request = require("supertest");
 const createApp = require("../src/app");
 const pool = require("../src/database/pool");
+const emailService = require("../src/services/email.service");
 
 const app = createApp();
 
@@ -269,6 +270,122 @@ describe("PUT /api/users/senha", () => {
   test("exige autenticação", async () => {
     const res = await request(app).put("/api/users/senha").send({});
     expect(res.status).toBe(401);
+  });
+});
+
+describe("POST /api/auth/esqueci-senha", () => {
+  beforeEach(async () => {
+    await request(app).post("/api/auth/register").send(usuarioValido);
+  });
+
+  test("responde com mensagem generica pra e-mail existente", async () => {
+    const res = await request(app).post("/api/auth/esqueci-senha").send({ email: usuarioValido.email });
+    expect(res.status).toBe(200);
+    expect(res.body.mensagem).toMatch(/receber um link/i);
+  });
+
+  test("responde com a MESMA mensagem generica pra e-mail inexistente (nao revela quais e-mails existem)", async () => {
+    const resExistente = await request(app).post("/api/auth/esqueci-senha").send({ email: usuarioValido.email });
+    const resInexistente = await request(app).post("/api/auth/esqueci-senha").send({ email: "ninguem@example.com" });
+    expect(resInexistente.status).toBe(200);
+    expect(resInexistente.body.mensagem).toBe(resExistente.body.mensagem);
+  });
+
+  test("cria um token de recuperacao pra e-mail existente, mas nao pra e-mail inexistente", async () => {
+    await request(app).post("/api/auth/esqueci-senha").send({ email: "ninguem@example.com" });
+    let { rows } = await pool.query("SELECT * FROM tokens_recuperacao_senha");
+    expect(rows).toHaveLength(0);
+
+    await request(app).post("/api/auth/esqueci-senha").send({ email: usuarioValido.email });
+    ({ rows } = await pool.query("SELECT * FROM tokens_recuperacao_senha"));
+    expect(rows).toHaveLength(1);
+    expect(rows[0].usado_em).toBeNull();
+  });
+
+  test("pedir de novo invalida o token anterior (so' o mais recente funciona)", async () => {
+    await request(app).post("/api/auth/esqueci-senha").send({ email: usuarioValido.email });
+    await request(app).post("/api/auth/esqueci-senha").send({ email: usuarioValido.email });
+    const { rows } = await pool.query("SELECT usado_em FROM tokens_recuperacao_senha ORDER BY id");
+    expect(rows).toHaveLength(2);
+    expect(rows[0].usado_em).not.toBeNull();
+    expect(rows[1].usado_em).toBeNull();
+  });
+
+  test("rejeita e-mail invalido", async () => {
+    const res = await request(app).post("/api/auth/esqueci-senha").send({ email: "nao-e-email" });
+    expect(res.status).toBe(422);
+  });
+});
+
+describe("POST /api/auth/redefinir-senha", () => {
+  // O token so' vai por e-mail (nunca na resposta da API, de proposito) - pro teste,
+  // intercepta o envio e tira o token do link, sem depender de e-mail de verdade.
+  async function pedirRecuperacaoEPegarToken() {
+    await request(app).post("/api/auth/register").send(usuarioValido);
+    const spy = jest.spyOn(emailService, "enviarRecuperacaoSenha").mockResolvedValue();
+    await request(app).post("/api/auth/esqueci-senha").send({ email: usuarioValido.email });
+    const { link } = spy.mock.calls[0][0];
+    spy.mockRestore();
+    return new URL(link).searchParams.get("token");
+  }
+
+  test("redefine a senha com token valido e permite logar com a nova (nao mais com a antiga)", async () => {
+    const token = await pedirRecuperacaoEPegarToken();
+    const res = await request(app)
+      .post("/api/auth/redefinir-senha")
+      .send({ token, novaSenha: "senhaNova789", confirmarNovaSenha: "senhaNova789" });
+    expect(res.status).toBe(200);
+
+    const loginAntiga = await request(app).post("/api/auth/login").send({ email: usuarioValido.email, senha: usuarioValido.senha });
+    expect(loginAntiga.status).toBe(401);
+
+    const loginNova = await request(app).post("/api/auth/login").send({ email: usuarioValido.email, senha: "senhaNova789" });
+    expect(loginNova.status).toBe(200);
+  });
+
+  test("token so' funciona uma vez", async () => {
+    const token = await pedirRecuperacaoEPegarToken();
+    await request(app).post("/api/auth/redefinir-senha").send({ token, novaSenha: "senhaNova789", confirmarNovaSenha: "senhaNova789" });
+    const segunda = await request(app)
+      .post("/api/auth/redefinir-senha")
+      .send({ token, novaSenha: "outraSenha000", confirmarNovaSenha: "outraSenha000" });
+    expect(segunda.status).toBe(400);
+  });
+
+  test("rejeita token que nao existe", async () => {
+    const res = await request(app)
+      .post("/api/auth/redefinir-senha")
+      .send({ token: "token-que-nao-existe", novaSenha: "senhaNova789", confirmarNovaSenha: "senhaNova789" });
+    expect(res.status).toBe(400);
+  });
+
+  test("rejeita token expirado", async () => {
+    const token = await pedirRecuperacaoEPegarToken();
+    await pool.query("UPDATE tokens_recuperacao_senha SET expira_em = now() - interval '1 minute'");
+    const res = await request(app)
+      .post("/api/auth/redefinir-senha")
+      .send({ token, novaSenha: "senhaNova789", confirmarNovaSenha: "senhaNova789" });
+    expect(res.status).toBe(400);
+  });
+
+  test("rejeita sem token", async () => {
+    const res = await request(app)
+      .post("/api/auth/redefinir-senha")
+      .send({ novaSenha: "senhaNova789", confirmarNovaSenha: "senhaNova789" });
+    expect(res.status).toBe(422);
+  });
+
+  test("rejeita senha curta ou senhas diferentes", async () => {
+    const token = await pedirRecuperacaoEPegarToken();
+    const curta = await request(app)
+      .post("/api/auth/redefinir-senha")
+      .send({ token, novaSenha: "curta", confirmarNovaSenha: "curta" });
+    expect(curta.status).toBe(422);
+
+    const diferentes = await request(app)
+      .post("/api/auth/redefinir-senha")
+      .send({ token, novaSenha: "senhaNova789", confirmarNovaSenha: "outraCoisa" });
+    expect(diferentes.status).toBe(422);
   });
 });
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Entrar | Meu Bolso Digital</title>
+<title>Redefinir senha | Meu Bolso Digital</title>
 <link rel="icon" href="assets/images/logo-icon.png">
 <link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://backend-production-827d.up.railway.app">
@@ -39,50 +39,46 @@
         </div>
 
         <div class="auth-caixa-nova">
-          <div id="local-faixa-instalar"></div>
           <section class="card">
             <div class="auth-logo">
               <img src="assets/images/logo-icon.png" alt="Meu Bolso Digital">
             </div>
-            <h1 style="text-align:center">Entrar</h1>
-            <p class="hint" style="text-align:center">Acesse sua conta para controlar suas finanças.</p>
+            <h1 style="text-align:center">Criar nova senha</h1>
+            <p class="hint" style="text-align:center">Escolha uma senha nova para sua conta.</p>
 
             <p class="alerta alerta-erro" id="erro-geral" role="alert" aria-live="assertive" hidden></p>
+            <p class="alerta alerta-sucesso" id="sucesso-geral" role="status" aria-live="polite" hidden></p>
 
-            <form id="form-login" novalidate>
+            <form id="form-redefinir-senha" novalidate>
               <div class="campo">
-                <label for="email">E-mail</label>
-                <div class="campo-com-icone">
-                  <svg class="icone-campo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>
-                  <input type="email" id="email" name="email" autocomplete="email" required maxlength="160" placeholder="seu@email.com" autofocus>
-                </div>
-                <p class="erro-campo" data-campo="email" hidden></p>
-              </div>
-              <div class="campo">
-                <label for="senha">Senha</label>
+                <label for="novaSenha">Nova senha</label>
                 <div class="campo-com-icone">
                   <svg class="icone-campo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                  <input type="password" id="senha" name="senha" autocomplete="current-password" required maxlength="200" placeholder="Digite sua senha">
-                  <button type="button" class="alternar-senha" data-campo-senha="senha" aria-label="Mostrar senha">
+                  <input type="password" id="novaSenha" name="novaSenha" autocomplete="new-password" required minlength="8" maxlength="200" placeholder="Pelo menos 8 caracteres" autofocus>
+                  <button type="button" class="alternar-senha" data-campo-senha="novaSenha" aria-label="Mostrar senha">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
                   </button>
                 </div>
-                <p class="erro-campo" data-campo="senha" hidden></p>
+                <p class="erro-campo" data-campo="novaSenha" hidden></p>
               </div>
-              <div class="linha-opcoes-login">
-                <label class="opcao-lembrar">
-                  <input type="checkbox" id="lembrar" checked>
-                  Lembrar de mim
-                </label>
-                <a href="esqueci-senha.html" class="link-esqueci">Esqueci minha senha</a>
+              <div class="campo">
+                <label for="confirmarNovaSenha">Confirmar nova senha</label>
+                <div class="campo-com-icone">
+                  <svg class="icone-campo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  <input type="password" id="confirmarNovaSenha" name="confirmarNovaSenha" autocomplete="new-password" required maxlength="200" placeholder="Digite a senha de novo">
+                  <button type="button" class="alternar-senha" data-campo-senha="confirmarNovaSenha" aria-label="Mostrar senha">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
+                <p class="erro-campo" data-campo="confirmarNovaSenha" hidden></p>
               </div>
-              <button type="submit" class="btn btn-primario" id="btn-entrar">
-                <span data-texto>Entrar</span>
+              <button type="submit" class="btn btn-primario" id="btn-redefinir">
+                <span data-texto>Salvar nova senha</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
               </button>
             </form>
           </section>
-          <p class="auth-rodape">Ainda não tem conta? <a href="cadastro.html">Criar conta</a></p>
+          <p class="auth-rodape">Precisa de um link novo? <a href="esqueci-senha.html">Pedir de novo</a></p>
         </div>
       </div>
 
@@ -125,41 +121,50 @@
   <script src="js/pwa.js"></script>
   <script>
     Sessao.redirecionarSeLogado();
-    Instalador.montarFaixa(document.getElementById("local-faixa-instalar"));
 
-    document.querySelectorAll(".alternar-senha").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const input = document.getElementById(btn.dataset.campoSenha);
+    const token = new URLSearchParams(window.location.search).get("token") || "";
+    const form = document.getElementById("form-redefinir-senha");
+    const erroGeral = document.getElementById("erro-geral");
+    const sucessoGeral = document.getElementById("sucesso-geral");
+    const btn = document.getElementById("btn-redefinir");
+    const btnTexto = btn.querySelector("[data-texto]");
+
+    if (!token) {
+      form.hidden = true;
+      mostrarErro(erroGeral, "Link inválido. Peça uma nova recuperação de senha.");
+    }
+
+    document.querySelectorAll(".alternar-senha").forEach((toggle) => {
+      toggle.addEventListener("click", () => {
+        const input = document.getElementById(toggle.dataset.campoSenha);
         const mostrando = input.type === "text";
         input.type = mostrando ? "password" : "text";
-        btn.setAttribute("aria-label", mostrando ? "Mostrar senha" : "Esconder senha");
+        toggle.setAttribute("aria-label", mostrando ? "Mostrar senha" : "Esconder senha");
       });
     });
-
-    const form = document.getElementById("form-login");
-    const erroGeral = document.getElementById("erro-geral");
-    const btn = document.getElementById("btn-entrar");
-    const btnTexto = btn.querySelector("[data-texto]");
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       mostrarErro(erroGeral, "");
+      mostrarErro(sucessoGeral, "");
       limparErrosCampos(form);
       btn.disabled = true;
-      btnTexto.textContent = "Entrando...";
+      btnTexto.textContent = "Salvando...";
       try {
-        const dados = await Api.login({
-          email: document.getElementById("email").value.trim(),
-          senha: document.getElementById("senha").value,
+        const dados = await Api.redefinirSenha({
+          token,
+          novaSenha: document.getElementById("novaSenha").value,
+          confirmarNovaSenha: document.getElementById("confirmarNovaSenha").value,
         });
-        Sessao.salvar(dados.token, dados.usuario, document.getElementById("lembrar").checked);
-        window.location.href = "dashboard.html";
+        form.hidden = true;
+        mostrarErro(sucessoGeral, `${dados.mensagem} Redirecionando...`);
+        setTimeout(() => { window.location.href = "login.html"; }, 1800);
       } catch (err) {
-        if (err.status === 422) mostrarErrosCampos(form, err.body.campos);
+        if (err.status === 422 && err.body.campos) mostrarErrosCampos(form, err.body.campos);
         else mostrarErro(erroGeral, err.message);
       } finally {
         btn.disabled = false;
-        btnTexto.textContent = "Entrar";
+        btnTexto.textContent = "Salvar nova senha";
       }
     });
   </script>

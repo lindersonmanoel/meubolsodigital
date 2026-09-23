@@ -188,6 +188,30 @@
   padding-right: 38px;
 }
 
+.linha-opcoes-login {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: -6px 0 16px;
+  font-size: 0.86rem;
+}
+.opcao-lembrar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--dim);
+  cursor: pointer;
+}
+.opcao-lembrar input {
+  width: auto;
+  margin: 0;
+  cursor: pointer;
+}
+.link-esqueci {
+  white-space: nowrap;
+}
+
 @media (max-width: 760px) {
   /* No celular o cartao de login vem primeiro (o que a pessoa quer fazer), o texto de
      apresentacao vem depois - ordem visual via flex, sem mudar o HTML. */

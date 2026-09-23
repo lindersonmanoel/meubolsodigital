@@ -1,12 +1,20 @@
 "use strict";
 
+const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const config = require("../config");
 const userModel = require("../models/user.model");
+const passwordResetModel = require("../models/passwordReset.model");
+const emailService = require("./email.service");
 const { AppError } = require("../utils/errors");
 
 const SALT_ROUNDS = 12;
+const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hora
+
+function hashToken(token) {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
 
 class AuthError extends AppError {
   constructor(message, statusCode = 400, campo = null) {
@@ -59,6 +67,38 @@ async function trocarSenha(usuarioId, { senhaAtual, novaSenha, confirmarNovaSenh
   await userModel.updateSenhaHash(usuarioId, senhaHash);
 }
 
+async function solicitarRecuperacaoSenha(email) {
+  const usuario = await userModel.findByEmail(email);
+  // Mensagem de resposta e' sempre a mesma exista ou nao o e-mail (o controller cuida
+  // disso) - ao contrario do cadastro, aqui nao ha' necessidade nenhuma de diferenciar:
+  // a pessoa so' olha o proprio e-mail depois, entao dar silenciosamente errado quando
+  // a conta nao existe fecha por completo a enumeracao nesta rota.
+  if (!usuario) return;
+
+  await passwordResetModel.invalidarPendentes(usuario.id);
+
+  const token = crypto.randomBytes(32).toString("hex");
+  const expiraEm = new Date(Date.now() + RESET_TOKEN_TTL_MS);
+  await passwordResetModel.criar({ usuarioId: usuario.id, tokenHash: hashToken(token), expiraEm });
+
+  const link = `${config.frontendUrl}/redefinir-senha.html?token=${token}`;
+  await emailService.enviarRecuperacaoSenha({ para: usuario.email, nome: usuario.nome, link });
+}
+
+async function redefinirSenhaComToken(token, { novaSenha, confirmarNovaSenha }) {
+  const erros = {};
+  if (String(novaSenha || "").length < 8) erros.novaSenha = "A nova senha precisa ter pelo menos 8 caracteres.";
+  if (novaSenha !== confirmarNovaSenha) erros.confirmarNovaSenha = "As senhas não coincidem.";
+  if (Object.keys(erros).length) throw new AppError("Dados inválidos.", 422, erros);
+
+  const registro = await passwordResetModel.buscarValidoPorHash(hashToken(token));
+  if (!registro) throw new AuthError("Link inválido ou expirado. Peça uma nova recuperação de senha.", 400);
+
+  const senhaHash = await bcrypt.hash(novaSenha, SALT_ROUNDS);
+  await userModel.updateSenhaHash(registro.usuario_id, senhaHash);
+  await passwordResetModel.marcarUsado(registro.id);
+}
+
 function verificarToken(token) {
   try {
     const payload = jwt.verify(token, config.jwtSecret);
@@ -68,4 +108,13 @@ function verificarToken(token) {
   }
 }
 
-module.exports = { AuthError, registrar, autenticar, verificarToken, assinarToken, trocarSenha };
+module.exports = {
+  AuthError,
+  registrar,
+  autenticar,
+  verificarToken,
+  assinarToken,
+  trocarSenha,
+  solicitarRecuperacaoSenha,
+  redefinirSenhaComToken,
+};

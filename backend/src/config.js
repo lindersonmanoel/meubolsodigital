@@ -41,6 +41,8 @@ function buildConfig() {
     jwtSecret,
     jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
     frontendUrl: process.env.FRONTEND_URL || "http://localhost:5500",
+    resendApiKey: process.env.RESEND_API_KEY || "",
+    emailFrom: process.env.EMAIL_FROM || "Meu Bolso Digital <onboarding@resend.dev>",
   };
 }
 

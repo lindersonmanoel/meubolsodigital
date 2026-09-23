@@ -19,9 +19,11 @@ Sem Supabase: toda comunicação entre o frontend e o banco passa pela API do ba
 
 ## Funcionalidades
 
-- **Conta e sessão**: cadastro, login com token JWT, sessão no navegador, trocar nome/e-mail,
-  trocar senha, foto de perfil (recortada/redimensionada no navegador antes de enviar,
-  guardada como base64 no banco - sem serviço de armazenamento externo) e bio curta.
+- **Conta e sessão**: cadastro, login com token JWT, "lembrar de mim" (sessão persiste ao
+  fechar o navegador ou não, por escolha da pessoa), recuperação de senha por e-mail
+  (link de uso único, válido por 1 hora, via Resend), trocar nome/e-mail, trocar senha,
+  foto de perfil (recortada/redimensionada no navegador antes de enviar, guardada como
+  base64 no banco - sem serviço de armazenamento externo) e bio curta.
 - **Backup e restauração**: baixe um arquivo `.json` com tudo que você cadastrou
   (categorias, movimentações, metas, orçamentos, recorrências) e restaure depois - útil se
   perder dados por engano. Restaurar nunca apaga o que já existe (categorias repetidas são
@@ -64,7 +66,11 @@ Sem Supabase: toda comunicação entre o frontend e o banco passa pela API do ba
 - Limite de tentativas de cadastro/login por IP (`express-rate-limit`), contra força bruta -
   já preparado pra rodar atrás de proxy (Railway) sem quebrar (`trust proxy`).
 - Mensagem de erro de login genérica ("e-mail ou senha inválidos"): não revela se o e-mail
-  existe.
+  existe. O pedido de recuperação de senha responde sempre com a mesma mensagem também,
+  exista ou não a conta.
+- Token de recuperação de senha: aleatório (32 bytes), guardado no banco só como hash
+  (sha256, nunca em texto puro), de uso único e expira em 1 hora; pedir de novo invalida
+  o link anterior.
 - CORS restrito ao `FRONTEND_URL` configurado; cabeçalhos de segurança via Helmet; respostas
   comprimidas (gzip).
 - Exportação em CSV protegida contra injeção de fórmula (um valor que comece com `=`, `+`,
@@ -122,7 +128,7 @@ Tudo debaixo de `/api`, autenticado com `Authorization: Bearer <token>` (exceto 
 
 | Recurso | Rotas |
 |---|---|
-| Auth | `POST /auth/register`, `POST /auth/login` *(sem token)*, `GET /auth/me`, `POST /auth/logout` |
+| Auth | `POST /auth/register`, `POST /auth/login`, `POST /auth/esqueci-senha`, `POST /auth/redefinir-senha` *(essas 4, sem token)*, `GET /auth/me`, `POST /auth/logout` |
 | Perfil | `PUT /users/me`, `PUT /users/senha` |
 | Categorias | `GET/POST /categorias`, `PUT/DELETE /categorias/:id` |
 | Movimentações | `GET/POST /movimentacoes`, `PUT/DELETE /movimentacoes/:id`, `GET /movimentacoes/exportar` (CSV), `GET /movimentacoes/exportar-excel` (.xlsx) |
@@ -223,7 +229,9 @@ entre si, então precisam rodar em série, não em paralelo).
 | `DATABASE_SSL_CA` | - | Certificado (PEM) da CA do provedor, para validar a conexão SSL com o banco. Sem isso, `DATABASE_SSL=true` conecta sem verificar a cadeia (comum em Railway/Heroku) |
 | `JWT_SECRET` | Sim | Segredo que assina os tokens de login. Gere um valor aleatório forte. |
 | `JWT_EXPIRES_IN` | - | Validade do token (padrão `7d`) |
-| `FRONTEND_URL` | Sim | Endereço do frontend, liberado no CORS |
+| `FRONTEND_URL` | Sim | Endereço do frontend, liberado no CORS e usado no link do e-mail de recuperação de senha |
+| `RESEND_API_KEY` | - | Chave da API do [Resend](https://resend.com), para enviar o e-mail de "esqueci minha senha". Sem isso, o link fica só no log do servidor |
+| `EMAIL_FROM` | - | Remetente do e-mail de recuperação de senha (padrão `onboarding@resend.dev`, funciona sem domínio próprio verificado) |
 
 O `.env` nunca deve ir para o Git (já está no `.gitignore`). Em produção, sem essas três
 variáveis obrigatórias preenchidas, o servidor recusa iniciar.

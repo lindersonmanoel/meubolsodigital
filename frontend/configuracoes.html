@@ -306,7 +306,7 @@
         const { usuario } = await Api.atualizarPerfil(payload);
         fotoNova = undefined;
         const cache = Sessao.usuario();
-        Sessao.salvar(localStorage.getItem("mbd_token"), { ...cache, ...usuario });
+        Sessao.salvar(Sessao.tokenAtual(), { ...cache, ...usuario });
         mostrarErro(sucessoPerfil, "Perfil atualizado com sucesso.");
         document.getElementById("saudacao").textContent = usuario.email;
       } catch (err) {

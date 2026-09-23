@@ -2,7 +2,7 @@
 
 const authService = require("../services/auth.service");
 const userModel = require("../models/user.model");
-const { validateRegister, validateLogin, normalizeEmail } = require("../utils/validators");
+const { validateRegister, validateLogin, validateEsqueciSenha, normalizeEmail } = require("../utils/validators");
 
 async function register(req, res, next) {
   try {
@@ -26,6 +26,31 @@ async function login(req, res, next) {
 
     const { usuario, token } = await authService.autenticar({ email, senha: req.body.senha });
     return res.json({ usuario, token });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function esqueciSenha(req, res, next) {
+  try {
+    const { valido, erros, email } = validateEsqueciSenha(req.body || {});
+    if (!valido) return res.status(422).json({ erro: "Dados inválidos.", campos: erros });
+
+    await authService.solicitarRecuperacaoSenha(email);
+    // Sempre a mesma resposta, exista ou nao o e-mail - ver comentario no auth.service.
+    return res.json({ mensagem: "Se esse e-mail estiver cadastrado, você vai receber um link em instantes." });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function redefinirSenha(req, res, next) {
+  try {
+    const token = String((req.body || {}).token || "");
+    if (!token) return res.status(422).json({ erro: "Dados inválidos.", campos: { token: "Link inválido." } });
+
+    await authService.redefinirSenhaComToken(token, req.body || {});
+    return res.json({ mensagem: "Senha redefinida com sucesso." });
   } catch (err) {
     return next(err);
   }
@@ -111,4 +136,4 @@ async function trocarSenha(req, res, next) {
   }
 }
 
-module.exports = { register, login, logout, me, updateMe, trocarSenha };
+module.exports = { register, login, logout, me, updateMe, trocarSenha, esqueciSenha, redefinirSenha };

@@ -33,4 +33,11 @@ function validateLogin({ email, senha }) {
   return { valido: Object.keys(erros).length === 0, erros, email: emailLimpo };
 }
 
-module.exports = { normalizeEmail, validateRegister, validateLogin, EMAIL_RE };
+function validateEsqueciSenha({ email }) {
+  const erros = {};
+  const emailLimpo = normalizeEmail(email);
+  if (!emailLimpo || !EMAIL_RE.test(emailLimpo)) erros.email = "Informe um e-mail válido.";
+  return { valido: Object.keys(erros).length === 0, erros, email: emailLimpo };
+}
+
+module.exports = { normalizeEmail, validateRegister, validateLogin, validateEsqueciSenha, EMAIL_RE };

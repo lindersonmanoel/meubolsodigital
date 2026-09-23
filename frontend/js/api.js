@@ -12,7 +12,7 @@ class ApiError extends Error {
 const Api = (function () {
   function tokenAtual() {
     try {
-      return localStorage.getItem("mbd_token") || "";
+      return localStorage.getItem("mbd_token") || sessionStorage.getItem("mbd_token") || "";
     } catch (e) {
       return "";
     }
@@ -83,6 +83,8 @@ const Api = (function () {
     registrar: (payload) => request("/auth/register", { method: "POST", body: payload }),
     login: (payload) => request("/auth/login", { method: "POST", body: payload }),
     logout: () => request("/auth/logout", { method: "POST" }),
+    esqueciSenha: (payload) => request("/auth/esqueci-senha", { method: "POST", body: payload }),
+    redefinirSenha: (payload) => request("/auth/redefinir-senha", { method: "POST", body: payload }),
     me: () => request("/auth/me", { autenticado: true }),
     atualizarPerfil: (payload) => request("/users/me", { method: "PUT", body: payload, autenticado: true }),
     trocarSenha: (payload) => request("/users/senha", { method: "PUT", body: payload, autenticado: true }),

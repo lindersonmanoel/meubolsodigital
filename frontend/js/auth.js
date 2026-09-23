@@ -1,32 +1,68 @@
 "use strict";
 
 const Sessao = (function () {
-  function salvar(token, usuario) {
+  const CHAVE_TOKEN = "mbd_token";
+  const CHAVE_USUARIO = "mbd_usuario";
+
+  // Em qual storage a sessao atual esta guardada (se houver) - usado quando "salvar" e'
+  // chamado sem dizer explicitamente se e' pra lembrar ou nao (ex.: ao so' atualizar o
+  // perfil), pra manter a escolha que a pessoa fez no login.
+  function storageAtual() {
     try {
-      localStorage.setItem("mbd_token", token);
-      localStorage.setItem("mbd_usuario", JSON.stringify(usuario));
+      if (localStorage.getItem(CHAVE_TOKEN)) return localStorage;
     } catch (e) {
-      // localStorage bloqueado (ex.: aba anonima restrita) - a sessao so dura a aba atual
+      /* ignorado */
+    }
+    try {
+      if (sessionStorage.getItem(CHAVE_TOKEN)) return sessionStorage;
+    } catch (e) {
+      /* ignorado */
+    }
+    return null;
+  }
+
+  /**
+   * @param {boolean} [lembrar] true = localStorage (sobrevive a fechar o navegador),
+   *   false = sessionStorage (sai ao fechar a aba). Omitido: mantem o tipo de
+   *   armazenamento que a sessao atual ja estiver usando (ou localStorage se nenhuma).
+   */
+  function salvar(token, usuario, lembrar) {
+    const persistente = lembrar !== undefined ? lembrar : storageAtual() !== sessionStorage;
+    const principal = persistente ? localStorage : sessionStorage;
+    const outro = persistente ? sessionStorage : localStorage;
+    try {
+      outro.removeItem(CHAVE_TOKEN);
+      outro.removeItem(CHAVE_USUARIO);
+      principal.setItem(CHAVE_TOKEN, token);
+      principal.setItem(CHAVE_USUARIO, JSON.stringify(usuario));
+    } catch (e) {
+      // storage bloqueado (ex.: aba anonima restrita) - a sessao so dura a aba atual
+    }
+  }
+  function tokenAtual() {
+    try {
+      return localStorage.getItem(CHAVE_TOKEN) || sessionStorage.getItem(CHAVE_TOKEN) || "";
+    } catch (e) {
+      return "";
     }
   }
   function usuario() {
     try {
-      return JSON.parse(localStorage.getItem("mbd_usuario") || "null");
+      const bruto = localStorage.getItem(CHAVE_USUARIO) || sessionStorage.getItem(CHAVE_USUARIO);
+      return JSON.parse(bruto || "null");
     } catch (e) {
       return null;
     }
   }
   function estaLogado() {
-    try {
-      return !!localStorage.getItem("mbd_token");
-    } catch (e) {
-      return false;
-    }
+    return !!tokenAtual();
   }
   function encerrar() {
     try {
-      localStorage.removeItem("mbd_token");
-      localStorage.removeItem("mbd_usuario");
+      localStorage.removeItem(CHAVE_TOKEN);
+      localStorage.removeItem(CHAVE_USUARIO);
+      sessionStorage.removeItem(CHAVE_TOKEN);
+      sessionStorage.removeItem(CHAVE_USUARIO);
     } catch (e) {
       /* nada a fazer */
     }
@@ -39,7 +75,7 @@ const Sessao = (function () {
   function redirecionarSeLogado() {
     if (estaLogado()) window.location.href = "dashboard.html";
   }
-  return { salvar, usuario, estaLogado, encerrar, exigirLogin, redirecionarSeLogado };
+  return { salvar, tokenAtual, usuario, estaLogado, encerrar, exigirLogin, redirecionarSeLogado };
 })();
 
 function mostrarErro(elemento, mensagem) {
