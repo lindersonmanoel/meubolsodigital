@@ -85,6 +85,7 @@
 
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/categoria-rapida.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/shell.js"></script>
   <script src="js/tour.js"></script>
@@ -115,9 +116,15 @@
       const relevantes = categorias.filter((c) => c.tipo === tipoAtual);
       selectCategoria.innerHTML =
         '<option value="">Sem categoria</option>' +
-        relevantes.map((c) => `<option value="${c.id}">${escaparHtml(c.nome)}</option>`).join("");
+        relevantes.map((c) => `<option value="${c.id}">${escaparHtml(c.nome)}</option>`).join("") +
+        CategoriaRapida.opcao();
     }
     document.getElementById("tipo").addEventListener("change", popularCategorias);
+    CategoriaRapida.ligar({
+      select: selectCategoria,
+      obterTipo: () => document.getElementById("tipo").value,
+      aoCriar: (categoria) => { categorias.push(categoria); popularCategorias(); },
+    });
 
     function abrirFormulario(recorrencia) {
       form.reset();

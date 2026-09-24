@@ -69,6 +69,112 @@ test.describe("fluxos principais", () => {
     await expect(page.locator("#corpo-tabela tr", { hasText: "Mercado" })).toHaveCount(0);
   });
 
+  test.describe("criar categoria dentro do formulario", () => {
+    const OPCAO_NOVA = "+ Criar nova categoria...";
+
+    test("conta SEM categorias: cria uma no formulario de despesa, ela fica selecionada e e' usada no lancamento", async ({ page, request }) => {
+      const conta = await criarConta(request); // NODE_ENV=test nao semeia categorias: conta vazia
+      await logarNoNavegador(page, conta);
+      await page.goto("/despesas");
+      await page.click("#btn-nova");
+      await expect(page.locator("#categoriaId")).toContainText("Sem categoria");
+      await page.selectOption("#categoriaId", { label: OPCAO_NOVA });
+
+      const caixa = page.locator(".categoria-rapida");
+      await expect(caixa).toBeVisible();
+      await caixa.locator("input").fill("Mercado");
+      await caixa.getByRole("button", { name: "Criar" }).click();
+      await expect(caixa).toBeHidden();
+      await expect(page.locator("#categoriaId option:checked")).toHaveText("Mercado");
+
+      await page.fill("#descricao", "Compras do mes");
+      await page.fill("#valor", "10");
+      await page.fill("#data", "2026-03-10");
+      await page.click("#btn-salvar");
+      await expect(page.locator("#corpo-tabela tr", { hasText: "Compras do mes" })).toContainText("Mercado");
+
+      const { json } = await api(request, "GET", "/categorias", null, conta.token);
+      expect(json.categorias.map((c) => `${c.nome}:${c.tipo}`)).toContain("Mercado:despesa");
+    });
+
+    test("Enter no campo de nome cria a categoria sem enviar o formulario principal; nome curto mostra erro", async ({ page, request }) => {
+      const conta = await criarConta(request);
+      await logarNoNavegador(page, conta);
+      await page.goto("/despesas");
+      await page.click("#btn-nova");
+      await page.selectOption("#categoriaId", { label: OPCAO_NOVA });
+      const entrada = page.locator(".categoria-rapida input");
+
+      await entrada.fill("A");
+      await entrada.press("Enter");
+      await expect(page.locator(".categoria-rapida .erro-campo")).toContainText(/pelo menos 2/);
+
+      await entrada.fill("Transporte");
+      await entrada.press("Enter");
+      await expect(page.locator("#categoriaId option:checked")).toHaveText("Transporte");
+      await expect(page.locator("#corpo-tabela tr")).toHaveCount(0); // o Enter NAO salvou nenhuma despesa
+    });
+
+    test("cancelar volta para a selecao anterior e nome repetido mostra o erro do servidor", async ({ page, request }) => {
+      const conta = await criarConta(request);
+      await api(request, "POST", "/categorias", { nome: "Lazer", tipo: "despesa" }, conta.token);
+      await logarNoNavegador(page, conta);
+      await page.goto("/despesas");
+      await page.click("#btn-nova");
+      await page.selectOption("#categoriaId", { label: "Lazer" });
+      await page.selectOption("#categoriaId", { label: OPCAO_NOVA });
+      await page.locator(".categoria-rapida").getByRole("button", { name: "Cancelar" }).click();
+      await expect(page.locator(".categoria-rapida")).toBeHidden();
+      await expect(page.locator("#categoriaId option:checked")).toHaveText("Lazer");
+
+      await page.selectOption("#categoriaId", { label: OPCAO_NOVA });
+      await page.locator(".categoria-rapida input").fill("Lazer");
+      await page.locator(".categoria-rapida").getByRole("button", { name: "Criar" }).click();
+      await expect(page.locator(".categoria-rapida .erro-campo")).toContainText(/já tem uma categoria/i);
+    });
+
+    test("na tela de receitas a categoria criada e' do tipo receita", async ({ page, request }) => {
+      const conta = await criarConta(request);
+      await logarNoNavegador(page, conta);
+      await page.goto("/receitas");
+      await page.click("#btn-nova");
+      await page.selectOption("#categoriaId", { label: OPCAO_NOVA });
+      await page.locator(".categoria-rapida input").fill("Salario");
+      await page.locator(".categoria-rapida").getByRole("button", { name: "Criar" }).click();
+      await expect(page.locator("#categoriaId option:checked")).toHaveText("Salario");
+      const { json } = await api(request, "GET", "/categorias", null, conta.token);
+      expect(json.categorias.map((c) => `${c.nome}:${c.tipo}`)).toContain("Salario:receita");
+    });
+
+    test("orcamento: cria a categoria de despesa no proprio formulario e cria o orcamento", async ({ page, request }) => {
+      const conta = await criarConta(request);
+      await logarNoNavegador(page, conta);
+      await page.goto("/orcamentos");
+      await page.click("#btn-novo");
+      await page.selectOption("#categoriaId", { label: OPCAO_NOVA });
+      await page.locator(".categoria-rapida input").fill("Alimentacao");
+      await page.locator(".categoria-rapida").getByRole("button", { name: "Criar" }).click();
+      await expect(page.locator("#categoriaId option:checked")).toHaveText("Alimentacao");
+      await page.fill("#valorLimite", "500");
+      await page.click("#btn-salvar");
+      await expect(page.locator("#lista-orcamentos")).toContainText("Alimentacao");
+    });
+
+    test("recorrencia: cria a categoria do tipo escolhido no formulario", async ({ page, request }) => {
+      const conta = await criarConta(request);
+      await logarNoNavegador(page, conta);
+      await page.goto("/recorrencias");
+      await page.click("#btn-nova");
+      await page.selectOption("#tipo", "receita");
+      await page.selectOption("#categoriaId", { label: OPCAO_NOVA });
+      await page.locator(".categoria-rapida input").fill("Aluguel recebido");
+      await page.locator(".categoria-rapida").getByRole("button", { name: "Criar" }).click();
+      await expect(page.locator("#categoriaId option:checked")).toHaveText("Aluguel recebido");
+      const { json } = await api(request, "GET", "/categorias", null, conta.token);
+      expect(json.categorias.map((c) => `${c.nome}:${c.tipo}`)).toContain("Aluguel recebido:receita");
+    });
+  });
+
   test("errar a senha atual mostra o erro SEM deslogar; trocar a senha certa mantem a sessao", async ({ page, request }) => {
     const conta = await criarConta(request);
     await logarNoNavegador(page, conta);
