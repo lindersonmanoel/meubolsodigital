@@ -3,9 +3,18 @@
 // Numero da versao atual do app + historico do que mudou em cada uma. Usado pelo aviso de
 // atualizacao automatica (ver pwa.js): quando uma versao nova do service worker termina de
 // instalar, mostra pra pessoa qual e' essa versao e um resumo do que mudou.
-window.APP_VERSION = "1.8.0";
+window.APP_VERSION = "1.9.0";
 
 window.CHANGELOG = [
+  {
+    versao: "1.9.0",
+    data: "2026-09-24",
+    mudancas: [
+      "Celular: as listas viram cartões com valor e botões sempre visíveis, botões maiores e teclado numérico nos valores",
+      "Corrige o tour guiado, que reabria sozinho toda vez que o dashboard carregava",
+      "Errar a senha atual em Configurações não desloga mais; melhorias de segurança e no modo offline",
+    ],
+  },
   {
     versao: "1.8.0",
     data: "2026-09-22",

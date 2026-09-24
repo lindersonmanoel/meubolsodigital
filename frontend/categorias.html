@@ -129,7 +129,7 @@
     }
 
     async function excluir(categoria, forcar = false) {
-      if (!forcar && !confirm(`Excluir a categoria "${categoria.nome}"?`)) return;
+      if (!forcar && !confirm(`Excluir a categoria "${categoria.nome}"? Movimentações e recorrências que a usam ficam sem categoria, e o orçamento dessa categoria (se houver) é removido junto.`)) return;
       try {
         await Api.removerCategoria(categoria.id, forcar);
         await carregarLista();
