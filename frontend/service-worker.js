@@ -3,13 +3,15 @@
 // Service worker do Meu Bolso Digital: guarda a "casca" do app (HTML/CSS/JS/icone) pra
 // abrir rapido e funcionar offline. Nunca guarda respostas da API (dados financeiros
 // tem que vir sempre atualizados do servidor).
-const CACHE_NAME = "mbd-cache-v16";
+const CACHE_NAME = "mbd-cache-v17";
 // URLs "limpas" (sem .html) - e' o que o cleanUrls do vercel.json realmente serve; usar
 // esses paths no precache evita cair no redirecionamento 308 (.html -> sem extensao).
 const ARQUIVOS_ESSENCIAIS = [
   "/",
   "login",
   "cadastro",
+  "esqueci-senha",
+  "redefinir-senha",
   "dashboard",
   "categorias",
   "movimentacoes",
@@ -26,6 +28,7 @@ const ARQUIVOS_ESSENCIAIS = [
   "css/shell.css",
   "css/auth-hero.css",
   "css/responsive.css",
+  "css/print.css",
   "js/config.js",
   "js/api.js",
   "js/auth.js",
@@ -34,6 +37,10 @@ const ARQUIVOS_ESSENCIAIS = [
   "js/pwa.js",
   "js/tour.js",
   "js/versao.js",
+  "js/vendor/chart.umd.min.js",
+  "assets/images/logo.png",
+  "assets/images/logo-icon-192.png",
+  "assets/images/logo-maskable-192.png",
   "assets/images/logo-icon.png",
   "assets/images/logo-maskable.png",
 ];

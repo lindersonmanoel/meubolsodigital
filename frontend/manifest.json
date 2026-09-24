@@ -5,12 +5,65 @@
   "start_url": "dashboard.html",
   "scope": ".",
   "display": "standalone",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "background_color": "#f4f7fa",
   "theme_color": "#0d3b66",
   "lang": "pt-BR",
   "icons": [
-    { "src": "assets/images/logo-icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "assets/images/logo-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "assets/images/logo-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/images/logo-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/images/logo-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "assets/images/logo-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "id": "/dashboard",
+  "categories": [
+    "finance",
+    "productivity"
+  ],
+  "shortcuts": [
+    {
+      "name": "Nova despesa",
+      "short_name": "Despesa",
+      "url": "despesas.html",
+      "icons": [
+        {
+          "src": "assets/images/logo-icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Nova receita",
+      "short_name": "Receita",
+      "url": "receitas.html",
+      "icons": [
+        {
+          "src": "assets/images/logo-icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
   ]
 }

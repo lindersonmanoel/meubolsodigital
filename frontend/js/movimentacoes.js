@@ -117,11 +117,11 @@ function iniciarPaginaMovimentacoes(opcoes) {
     const classeValor = mov.tipo === "receita" ? "valor-receita" : "valor-despesa";
     const sinal = mov.tipo === "receita" ? "+" : "-";
     tr.innerHTML = `
-      <td>${formatarData(mov.data)}</td>
-      <td>${escaparHtml(mov.descricao)}</td>
-      <td>${mov.categoria_nome ? escaparHtml(mov.categoria_nome) : '<span class="hint">Sem categoria</span>'}</td>
-      <td class="coluna-tipo"><span class="badge badge-${mov.tipo}">${mov.tipo === "receita" ? "Receita" : "Despesa"}</span></td>
-      <td class="${classeValor}">${sinal} ${formatarMoeda(mov.valor)}</td>
+      <td data-label="Data">${formatarData(mov.data)}</td>
+      <td data-label="Descrição">${escaparHtml(mov.descricao)}</td>
+      <td data-label="Categoria">${mov.categoria_nome ? escaparHtml(mov.categoria_nome) : '<span class="hint">Sem categoria</span>'}</td>
+      <td class="coluna-tipo" data-label="Tipo"><span class="badge badge-${mov.tipo}">${mov.tipo === "receita" ? "Receita" : "Despesa"}</span></td>
+      <td class="${classeValor}" data-label="Valor">${sinal} ${formatarMoeda(mov.valor)}</td>
       <td class="tabela-acoes">
         <button type="button" data-acao="editar">Editar</button>
         <button type="button" class="excluir" data-acao="excluir">Excluir</button>

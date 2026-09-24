@@ -95,7 +95,7 @@ const Api = (function () {
     listarCategorias: () => request("/categorias", { autenticado: true }),
     criarCategoria: (payload) => request("/categorias", { method: "POST", body: payload, autenticado: true }),
     atualizarCategoria: (id, payload) => request(`/categorias/${id}`, { method: "PUT", body: payload, autenticado: true }),
-    removerCategoria: (id) => request(`/categorias/${id}`, { method: "DELETE", autenticado: true }),
+    removerCategoria: (id, forcar) => request(`/categorias/${id}${forcar ? "?forcar=1" : ""}`, { method: "DELETE", autenticado: true }),
 
     // Movimentações (genérico, receitas e despesas usam a mesma forma com base diferente)
     listarMovimentacoes: (base, filtros) => request(`/${base}${montarQuery(filtros)}`, { autenticado: true }),

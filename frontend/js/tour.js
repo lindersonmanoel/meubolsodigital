@@ -33,7 +33,11 @@ const Tour = (function () {
 
   function lerPasso() {
     try {
-      const v = Number(localStorage.getItem(CHAVE_PASSO));
+      const bruto = localStorage.getItem(CHAVE_PASSO);
+      // Sem a chave nao ha tour em andamento. (Number(null) e' 0: sem esta checagem o tour reabria
+      // no passo 1 TODA vez que o dashboard carregava, mesmo depois de "Pular tour".)
+      if (bruto === null || bruto === "") return null;
+      const v = Number(bruto);
       return Number.isInteger(v) && v >= 0 && v < PASSOS.length ? v : null;
     } catch (e) {
       return null;
