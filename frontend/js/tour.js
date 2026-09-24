@@ -18,7 +18,7 @@ const Tour = (function () {
     { pagina: "despesas.html", seletor: "#btn-nova", titulo: "Despesas", texto: "Registre tudo o que sai da conta. Dá para filtrar por categoria, período ou buscar por descrição, e exportar em CSV ou Excel." },
     { pagina: "movimentacoes.html", seletor: "#btn-exportar", titulo: "Movimentações", texto: "Receitas e despesas juntas numa lista só, com filtros - e dá para exportar tudo em CSV ou Excel." },
     { pagina: "recorrencias.html", seletor: "#btn-nova", titulo: "Recorrências", texto: "Cadastre contas fixas (aluguel, assinaturas, salário) e elas são lançadas sozinhas todo mês, inclusive os meses em que você não abriu o app." },
-    { pagina: "orcamentos.html", seletor: "#btn-novo", titulo: "Orçamentos", texto: "Defina um limite de gasto mensal por categoria e veja o alerta quando chegar perto do limite ou estourar." },
+    { pagina: "orcamentos.html", seletor: "#btn-novo", titulo: "Orçamentos", texto: "Defina um limite de gasto por categoria, veja quanto sobra da renda do mês e use a calculadora para descobrir em quanto tempo quita suas dívidas." },
     { pagina: "categorias.html", seletor: "#btn-nova", titulo: "Categorias", texto: "Organize receitas e despesas em categorias para entender para onde vai seu dinheiro. Também dá para criar uma direto no formulário de lançamento." },
     { pagina: "metas.html", seletor: "#btn-nova", titulo: "Metas", texto: "Defina um objetivo (uma viagem, uma reserva) e acompanhe o progresso até alcançar o valor." },
     { pagina: "relatorios.html", seletor: "#btn-exportar-csv", titulo: "Relatórios", texto: "Veja o resumo de qualquer período e exporte em CSV, PDF ou Excel completo (com várias abas)." },

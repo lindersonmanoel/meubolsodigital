@@ -3,9 +3,17 @@
 // Numero da versao atual do app + historico do que mudou em cada uma. Usado pelo aviso de
 // atualizacao automatica (ver pwa.js): quando uma versao nova do service worker termina de
 // instalar, mostra pra pessoa qual e' essa versao e um resumo do que mudou.
-window.APP_VERSION = "1.9.2";
+window.APP_VERSION = "1.10.0";
 
 window.CHANGELOG = [
+  {
+    versao: "1.10.0",
+    data: "2026-09-24",
+    mudancas: [
+      "Orçamentos: novo resumo do mês mostra quanto sobra das receitas depois dos limites, e atualiza sozinho quando você muda um limite",
+      "Nova calculadora para quitar dívidas: informe saldo, juros e parcela mínima e veja em quantos meses você fica livre, os juros que vai pagar e a ordem de pagamento (bola de neve ou avalanche). É só uma simulação, nada vai para a sua conta",
+    ],
+  },
   {
     versao: "1.9.2",
     data: "2026-09-24",

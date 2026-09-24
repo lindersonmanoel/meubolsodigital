@@ -39,7 +39,10 @@ Sem Supabase: toda comunicação entre o frontend e o banco passa pela API do ba
   a movimentação do mês é gerada sozinha (sem duplicar) sempre que o dashboard é aberto, inclusive
   dos meses em que você não abriu o app (até 12 meses); um lançamento que você apagou não volta.
 - **Orçamentos**: limite de gasto mensal por categoria, com o quanto já foi gasto no mês,
-  percentual e aviso quando fica perto ou passa do limite.
+  percentual e aviso quando fica perto ou passa do limite. Mostra também o **resumo do mês** (receitas menos a
+  soma dos limites = sobra, atualizada sozinha quando um limite muda) e uma **calculadora de quitação de dívidas**:
+  informe saldo, juros e parcela mínima e veja em quantos meses você fica livre, o total de juros e a ordem de
+  pagamento (bola de neve ou avalanche). É só simulação no navegador: nada é enviado nem salvo na conta.
 - **Dashboard**: saldo atual, receitas/despesas/resultado do mês, gráfico de barras (receitas
   x despesas dos últimos 6 meses) e gráfico de rosca (despesas por categoria no mês), com
   Chart.js.
