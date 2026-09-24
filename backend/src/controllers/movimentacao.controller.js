@@ -30,8 +30,8 @@ function build(tipoFixo) {
   return {
     async listar(req, res, next) {
       try {
-        const itens = await service.listar(req.usuarioId, req.query, { tipoFixo });
-        res.json({ movimentacoes: itens });
+        const { itens, paginacao } = await service.listarPaginado(req.usuarioId, req.query, { tipoFixo });
+        res.json(paginacao ? { movimentacoes: itens, paginacao } : { movimentacoes: itens });
       } catch (err) {
         next(err);
       }

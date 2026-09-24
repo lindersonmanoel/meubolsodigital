@@ -30,10 +30,21 @@ function montarFiltro(usuarioId, filtros) {
   return { where: condicoes.join(" AND "), valores };
 }
 
-async function listar(usuarioId, filtros = {}) {
+async function listar(usuarioId, filtros = {}, paginacao = null) {
   const { where, valores } = montarFiltro(usuarioId, filtros);
-  const { rows } = await pool.query(`${SELECT_BASE} WHERE ${where} ORDER BY m.data DESC, m.id DESC`, valores);
+  let sql = `${SELECT_BASE} WHERE ${where} ORDER BY m.data DESC, m.id DESC`;
+  if (paginacao) {
+    valores.push(paginacao.limite, paginacao.offset);
+    sql += ` LIMIT $${valores.length - 1} OFFSET $${valores.length}`;
+  }
+  const { rows } = await pool.query(sql, valores);
   return rows;
+}
+
+async function contar(usuarioId, filtros = {}) {
+  const { where, valores } = montarFiltro(usuarioId, filtros);
+  const { rows } = await pool.query(`SELECT COUNT(*)::int AS total FROM movimentacoes m WHERE ${where}`, valores);
+  return rows[0].total;
 }
 
 async function buscarPorId(usuarioId, id) {
@@ -154,7 +165,7 @@ async function despesasPorCategoria(usuarioId, { inicio, fim } = {}) {
 }
 
 module.exports = {
-  listar, buscarPorId, criar, atualizar, remover,
+  listar, contar, buscarPorId, criar, atualizar, remover,
   totaisPorTipo, saldoTotal, porMes, despesasPorCategoria,
   existeGeradaNoMes, criarDeRecorrencia,
 };

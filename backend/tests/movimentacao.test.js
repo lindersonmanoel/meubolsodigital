@@ -90,6 +90,51 @@ describe("movimentacoes", () => {
     expect((await request(app).delete(`/api/movimentacoes/${id}`).set(b.headers)).status).toBe(404);
   });
 
+  describe("paginacao", () => {
+    async function criarVarias(headers, quantidade) {
+      for (let i = 1; i <= quantidade; i += 1) {
+        await request(app).post("/api/movimentacoes").set(headers).send({
+          tipo: "despesa", descricao: `Item ${i}`, valor: i, data: `2026-01-${String(i).padStart(2, "0")}`,
+        });
+      }
+    }
+
+    test("sem 'limite' devolve tudo, sem o campo paginacao (compativel com telas antigas)", async () => {
+      const { headers } = await criarUsuarioAutenticado(app);
+      await criarVarias(headers, 5);
+      const res = await request(app).get("/api/movimentacoes").set(headers);
+      expect(res.body.movimentacoes).toHaveLength(5);
+      expect(res.body.paginacao).toBeUndefined();
+    });
+
+    test("com 'limite' e 'pagina' devolve so' a fatia e o total", async () => {
+      const { headers } = await criarUsuarioAutenticado(app);
+      await criarVarias(headers, 5);
+      const p1 = await request(app).get("/api/movimentacoes?limite=2&pagina=1").set(headers);
+      expect(p1.body.movimentacoes.map((m) => m.descricao)).toEqual(["Item 5", "Item 4"]);
+      expect(p1.body.paginacao).toEqual({ pagina: 1, limite: 2, total: 5, totalPaginas: 3 });
+
+      const p3 = await request(app).get("/api/movimentacoes?limite=2&pagina=3").set(headers);
+      expect(p3.body.movimentacoes.map((m) => m.descricao)).toEqual(["Item 1"]);
+    });
+
+    test("o total respeita os filtros e o limite maximo e' 200", async () => {
+      const { headers } = await criarUsuarioAutenticado(app);
+      await criarVarias(headers, 5);
+      const filtrado = await request(app).get("/api/movimentacoes?limite=10&busca=Item 3").set(headers);
+      expect(filtrado.body.paginacao.total).toBe(1);
+      const enorme = await request(app).get("/api/movimentacoes?limite=99999").set(headers);
+      expect(enorme.body.paginacao.limite).toBe(200);
+    });
+
+    test("exportacao continua trazendo tudo, mesmo com 'limite' na URL", async () => {
+      const { headers } = await criarUsuarioAutenticado(app);
+      await criarVarias(headers, 3);
+      const res = await request(app).get("/api/movimentacoes/exportar?limite=1").set(headers);
+      expect((res.text.match(/Item \d/g) || []).length).toBe(3);
+    });
+  });
+
   describe("filtros", () => {
     async function popular(headers) {
       const alimentacao = await criarCategoria(headers, "despesa", "Alimentação");

@@ -20,6 +20,40 @@ function iniciarPaginaMovimentacoes(opcoes) {
 
   let categorias = [];
 
+  // Paginacao: a lista vem de 50 em 50 (o backend devolve "paginacao" so' quando pedimos).
+  const POR_PAGINA = 50;
+  let pagina = 1;
+  const paginador = document.createElement("div");
+  paginador.style.cssText = "display:flex;align-items:center;justify-content:center;gap:12px;margin-top:12px;flex-wrap:wrap";
+  paginador.hidden = true;
+  const tabelaLista = corpoTabela.closest("table");
+  if (tabelaLista) tabelaLista.insertAdjacentElement("afterend", paginador);
+
+  function desenharPaginador(info) {
+    if (!info || info.totalPaginas <= 1) {
+      paginador.hidden = true;
+      return;
+    }
+    paginador.innerHTML = "";
+    const anterior = document.createElement("button");
+    anterior.type = "button";
+    anterior.className = "btn btn-secundario";
+    anterior.textContent = "Anterior";
+    anterior.disabled = info.pagina <= 1;
+    anterior.addEventListener("click", () => { pagina = info.pagina - 1; carregarLista(); });
+    const texto = document.createElement("span");
+    texto.className = "hint";
+    texto.textContent = `Página ${info.pagina} de ${info.totalPaginas} (${info.total} lançamentos)`;
+    const proxima = document.createElement("button");
+    proxima.type = "button";
+    proxima.className = "btn btn-secundario";
+    proxima.textContent = "Próxima";
+    proxima.disabled = info.pagina >= info.totalPaginas;
+    proxima.addEventListener("click", () => { pagina = info.pagina + 1; carregarLista(); });
+    paginador.append(anterior, texto, proxima);
+    paginador.hidden = false;
+  }
+
   // Quando a pagina e' fixa em receita/despesa, esconde os seletores de tipo (nao fazem sentido).
   if (tipoFixo) {
     if (campoTipo) campoTipo.hidden = true;
@@ -123,7 +157,17 @@ function iniciarPaginaMovimentacoes(opcoes) {
     mostrarErro(erroGeral, "");
     carregando.hidden = false;
     try {
-      const { movimentacoes } = await Api.listarMovimentacoes(base, filtrosAtuais());
+      const { movimentacoes, paginacao } = await Api.listarMovimentacoes(base, {
+        ...filtrosAtuais(),
+        limite: POR_PAGINA,
+        pagina,
+      });
+      // Apagou o ultimo item da ultima pagina: volta pra ultima que ainda tem itens.
+      if (paginacao && !movimentacoes.length && paginacao.pagina > 1) {
+        pagina = paginacao.totalPaginas;
+        return carregarLista();
+      }
+      desenharPaginador(paginacao);
       corpoTabela.innerHTML = "";
       movimentacoes.forEach((m) => corpoTabela.appendChild(linhaMovimentacao(m)));
       listaVazia.hidden = movimentacoes.length > 0;
@@ -171,10 +215,12 @@ function iniciarPaginaMovimentacoes(opcoes) {
 
   document.getElementById("form-filtros").addEventListener("submit", (e) => {
     e.preventDefault();
+    pagina = 1;
     carregarLista();
   });
   document.getElementById("btn-limpar-filtros").addEventListener("click", () => {
     document.getElementById("form-filtros").reset();
+    pagina = 1;
     carregarLista();
   });
 

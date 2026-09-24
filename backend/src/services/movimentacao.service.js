@@ -74,6 +74,36 @@ async function listar(usuarioId, query, opts) {
   return movimentacaoModel.listar(usuarioId, normalizarFiltros(query, opts));
 }
 
+const LIMITE_MAXIMO = 200;
+
+/** So' pagina se a chamada trouxer "limite" - exportacoes e telas antigas seguem recebendo tudo. */
+function normalizarPaginacao(query) {
+  const limite = Number.parseInt(query.limite, 10);
+  if (!Number.isInteger(limite) || limite < 1) return null;
+  const tamanho = Math.min(limite, LIMITE_MAXIMO);
+  const pagina = Math.max(1, Number.parseInt(query.pagina, 10) || 1);
+  return { pagina, limite: tamanho, offset: (pagina - 1) * tamanho };
+}
+
+async function listarPaginado(usuarioId, query, opts) {
+  const paginacao = normalizarPaginacao(query);
+  if (!paginacao) return { itens: await listar(usuarioId, query, opts), paginacao: null };
+  const filtros = normalizarFiltros(query, opts);
+  const [itens, total] = await Promise.all([
+    movimentacaoModel.listar(usuarioId, filtros, paginacao),
+    movimentacaoModel.contar(usuarioId, filtros),
+  ]);
+  return {
+    itens,
+    paginacao: {
+      pagina: paginacao.pagina,
+      limite: paginacao.limite,
+      total,
+      totalPaginas: Math.max(1, Math.ceil(total / paginacao.limite)),
+    },
+  };
+}
+
 async function criar(usuarioId, dados, opts) {
   const validado = await validar(usuarioId, dados, opts);
   return movimentacaoModel.criar(usuarioId, validado);
@@ -91,4 +121,4 @@ async function remover(usuarioId, id) {
   if (!removida) throw new AppError("Movimentação não encontrada.", 404);
 }
 
-module.exports = { listar, criar, atualizar, remover, TIPOS_VALIDOS };
+module.exports = { listar, listarPaginado, criar, atualizar, remover, TIPOS_VALIDOS };
