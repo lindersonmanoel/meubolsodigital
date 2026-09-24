@@ -74,6 +74,17 @@ function esperar(cond, msg) {
     esperar(/frame-ancestors/.test(csp) && /object-src/.test(csp), "CSP ausente (ainda nao publicada?)");
   }, { obrigatorio: false });
 
+  // Se a CSP restringe connect-src, ela PRECISA listar a API: senao o navegador bloqueia todas as
+  // chamadas e o app "abre mas nao funciona" (acontece ao trocar o endereco da API e esquecer da CSP).
+  await teste("Site: CSP (connect-src) libera o endereco da API", async () => {
+    const { res } = await req(`${FRONTEND_URL}/login`);
+    const csp = res.headers.get("content-security-policy") || "";
+    const connect = (csp.match(/connect-src([^;]*)/) || [])[1];
+    if (connect === undefined) return "sem connect-src (nao restringe)";
+    const origemApi = new URL(API_URL).origin;
+    esperar(connect.includes(origemApi), `connect-src nao inclui ${origemApi}: o app nao consegue chamar a API`);
+  });
+
   await teste("Site: manifest.json e service-worker.js disponiveis", async () => {
     const m = await req(`${FRONTEND_URL}/manifest.json`);
     esperar(m.res.status === 200 && m.json && m.json.name, "manifest.json invalido");

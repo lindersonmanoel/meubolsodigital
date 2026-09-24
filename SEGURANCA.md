@@ -21,9 +21,10 @@ Rodar na mão: `node scripts/smoke-producao.js` (produção) e `bash scripts/ver
 3. **Logs da API** (Railway/VM): procurar `[erro não tratado]`, `[email] falha` e picos de `429`/`401`.
 4. **E-mail de recuperação**: pedir "esqueci minha senha" com uma conta real e confirmar que o e-mail chega.
 5. **Backup do banco**: conferir que o backup automático rodou e **restaurar em um banco de teste** de vez em quando.
-6. **CSP**: abrir o site com o console do navegador aberto e ver se há avisos de
-   `Content-Security-Policy-Report-Only`. Sem avisos por um tempo, endurecer a política (remover
-   `'unsafe-inline'` movendo scripts inline para arquivos) e trocar o header para o modo que bloqueia.
+6. **CSP**: a política está **aplicada** (`frontend/vercel.json`). Abrir o site com o console aberto e ver se há
+   avisos `Refused to ...`. Próximo endurecimento: remover `'unsafe-inline'` do `script-src` movendo os scripts
+   inline das páginas para arquivos `.js`. **Ao trocar o endereço da API, atualize o `connect-src`** (o smoke
+   test diário reprova se a CSP não liberar a API).
 7. **Acessos**: quem ainda tem acesso à Vercel, à Railway, ao GitHub, à Resend e à Cloudflare? Remover quem saiu.
 
 ## A cada 6 meses (ou quando alguém sai do projeto)
