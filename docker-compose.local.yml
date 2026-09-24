@@ -1,0 +1,20 @@
+# Uso local no Docker Desktop (complementa docker-compose.prod.yml): publica a API so em
+# 127.0.0.1:3000 e sobe um tunel ngrok HTTPS ate o backend. Sem o cloudflared do prod.
+# Uso: docker compose --env-file .env.production -f docker-compose.prod.yml -f docker-compose.local.yml up -d postgres backend ngrok
+# O endereco publico aparece em http://127.0.0.1:4040 (ou: curl http://127.0.0.1:4040/api/tunnels).
+services:
+  backend:
+    ports:
+      - "127.0.0.1:3000:3000"
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: meu-bolso-digital-ngrok
+    restart: unless-stopped
+    command: http backend:3000
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:?defina NGROK_AUTHTOKEN no .env.production}
+    ports:
+      - "127.0.0.1:4040:4040"
+    depends_on:
+      - backend
