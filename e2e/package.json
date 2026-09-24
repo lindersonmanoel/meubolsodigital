@@ -1,0 +1,14 @@
+{
+  "name": "meu-bolso-digital-e2e",
+  "private": true,
+  "description": "Testes de navegador (Playwright/Chromium): fluxos principais, layout de celular e seguranca do frontend.",
+  "scripts": {
+    "test": "playwright test",
+    "test:mobile": "playwright test --project=iphone --project=pixel --project=estreito",
+    "instalar-navegador": "playwright install --with-deps chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.49.1",
+    "serve": "^14.2.4"
+  }
+}

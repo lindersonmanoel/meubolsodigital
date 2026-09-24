@@ -116,6 +116,7 @@ MeuBolsoDigital/
 │                              004: recuperação de senha; 005: categorias padrão; 006: versão do token
 │                              (sessões); 007/008: recorrência sem duplicar e sem perder meses; 009: e-mail
 │                              único sem diferenciar maiúsculas)
+├── e2e/                       testes de navegador (Playwright): fluxos, layout de celular e segurança (ver e2e/README.md)
 ├── docker-compose.yml         PostgreSQL local pra desenvolvimento/teste
 ├── Dockerfile                 imagem de produção do backend (usada pelo Railway hoje)
 ├── docker-compose.prod.yml    stack alternativa pra VM própria (Postgres + backend + Cloudflare Tunnel)

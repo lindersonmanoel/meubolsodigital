@@ -8,6 +8,7 @@ rotas e funcionalidades. O que é automático roda no GitHub Actions; o resto é
 | O quê | Quando | Onde | Falha quando |
 |---|---|---|---|
 | Testes do backend (Jest + PostgreSQL) | a cada push e pull request | `.github/workflows/testes.yml` | qualquer teste quebra |
+| Testes de navegador E2E (Chromium: desktop e celular, CSP, XSS, fluxos) | a cada push e pull request | `.github/workflows/e2e.yml` (`e2e/`) | fluxo, layout de celular ou segurança do frontend quebra |
 | Fumaça em produção (site + API) | todo dia, 09:17 UTC | `.github/workflows/smoke-producao.yml` | site/API fora do ar, CORS ou cabeçalhos errados |
 | Auditoria de dependências e segredos | toda segunda, 08:00 UTC | `.github/workflows/seguranca.yml` | vulnerabilidade **alta/crítica** em dependência de produção, ou segredo no repositório |
 | Atualizações de dependências | toda segunda (PRs) | `.github/dependabot.yml` | abre PR; a suíte de testes valida |

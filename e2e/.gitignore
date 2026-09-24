@@ -1,0 +1,4 @@
+node_modules/
+serve.json
+playwright-report/
+test-results/
