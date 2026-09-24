@@ -115,6 +115,15 @@ function esperar(cond, msg) {
     esperar(res.status === 200 && json && json.banco === "ok", `status ${res.status}`);
   }, { obrigatorio: false });
 
+  await teste("E-mail de recuperacao de senha esta pronto pra todos (SMTP ou Resend com dominio)", async () => {
+    const { res, json } = await req(`${API_URL}/api/health/ready`);
+    esperar(res.status !== 404, "/health/ready ainda nao publicado");
+    esperar(json && json.email, "campo 'email' ainda nao publicado");
+    esperar(json.email === "smtp" || json.email === "resend",
+      `estado do e-mail: ${json.email} (o "esqueci minha senha" nao entrega a todos: use SMTP ou verifique um dominio na Resend)`);
+    return json.email;
+  }, { obrigatorio: false });
+
   await teste("API: cabecalhos de seguranca e sem X-Powered-By", async () => {
     const { res } = await req(`${API_URL}/api/health`);
     esperar(!res.headers.get("x-powered-by"), "X-Powered-By exposto");

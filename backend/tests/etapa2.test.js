@@ -119,7 +119,8 @@ describe("health check com banco (INF-02)", () => {
     expect((await request(app).get("/api/health")).body.status).toBe("ok");
     const ready = await request(app).get("/api/health/ready");
     expect(ready.status).toBe(200);
-    expect(ready.body).toEqual({ status: "ok", banco: "ok" });
+    expect(ready.body).toMatchObject({ status: "ok", banco: "ok" });
+    expect(typeof ready.body.email).toBe("string"); // estado do e-mail (sem segredos)
   });
 
   test("/api/health/ready responde 503 quando o banco falha", async () => {
@@ -271,18 +272,24 @@ describe("encerramento gracioso (INF-01)", () => {
     filho.stdout.on("data", (d) => { saida += d; });
     filho.stderr.on("data", (d) => { saida += d; });
 
-    await new Promise((resolve, rejeita) => {
-      const limite = setTimeout(() => rejeita(new Error(`servidor nao subiu: ${saida}`)), 10000);
-      const olhar = setInterval(() => {
-        if (saida.includes("rodando na porta")) { clearTimeout(limite); clearInterval(olhar); resolve(); }
-      }, 50);
-    });
+    try {
+      // sobe (com folga: maquina/CI carregado pode demorar)
+      await new Promise((resolve, rejeita) => {
+        const olhar = setInterval(() => {
+          if (saida.includes("rodando na porta")) { clearTimeout(limite); clearInterval(olhar); resolve(); }
+        }, 50);
+        const limite = setTimeout(() => { clearInterval(olhar); rejeita(new Error(`servidor nao subiu: ${saida}`)); }, 25000);
+      });
 
-    const codigo = await new Promise((resolve) => {
-      filho.on("exit", (c) => resolve(c));
-      filho.kill("SIGTERM");
-    });
-    expect(codigo).toBe(0);
-    expect(saida).toMatch(/SIGTERM recebido/);
-  }, 20000);
+      const codigo = await new Promise((resolve) => {
+        filho.on("exit", (c) => resolve(c));
+        filho.kill("SIGTERM");
+      });
+      expect(codigo).toBe(0);
+      expect(saida).toMatch(/SIGTERM recebido/);
+    } finally {
+      // nunca deixa o servidor de teste vivo (senao o Jest nao encerra)
+      if (filho.exitCode === null && filho.signalCode === null) filho.kill("SIGKILL");
+    }
+  }, 60000);
 });

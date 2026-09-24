@@ -4,6 +4,7 @@ const config = require("./config");
 const createApp = require("./app");
 
 const pool = require("./database/pool");
+const { avisoConfiguracaoEmail } = require("./services/email.service");
 
 const app = createApp();
 
@@ -11,6 +12,13 @@ const server = app.listen(config.port, () => {
   // eslint-disable-next-line no-console
   console.log(`[server] Meu Bolso Digital API rodando na porta ${config.port} (ambiente: ${config.nodeEnv})`);
 });
+
+// Em producao, avisa logo na subida se o e-mail de recuperacao de senha nao vai funcionar pra todo mundo.
+if (config.isProduction) {
+  const aviso = avisoConfiguracaoEmail();
+  // eslint-disable-next-line no-console
+  if (aviso) console.warn(aviso);
+}
 
 // Encerramento gracioso: como o Node roda como PID 1 no container, sem tratar SIGTERM o "docker stop"
 // (e todo redeploy) esperava 10 s e matava o processo no meio das requisicoes. Agora para de aceitar

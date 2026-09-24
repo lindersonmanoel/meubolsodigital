@@ -48,6 +48,12 @@ function buildConfig() {
     // Em teste desligado por padrao: os testes criam as proprias categorias e assumem conta vazia.
     categoriasPadrao: boolFromEnv(process.env.SEED_CATEGORIAS_PADRAO, nodeEnv !== "test"),
     resendApiKey: process.env.RESEND_API_KEY || "",
+    // SMTP (alternativa ao Resend, sem precisar de dominio proprio; ex.: Gmail com "senha de app").
+    smtpHost: process.env.SMTP_HOST || "",
+    smtpPort: Number(process.env.SMTP_PORT) || 587,
+    smtpSecure: boolFromEnv(process.env.SMTP_SECURE, Number(process.env.SMTP_PORT) === 465),
+    smtpUser: process.env.SMTP_USER || "",
+    smtpPass: process.env.SMTP_PASS || "",
     emailFrom: process.env.EMAIL_FROM || "Meu Bolso Digital <onboarding@resend.dev>",
   };
 }

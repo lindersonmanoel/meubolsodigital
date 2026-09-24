@@ -19,6 +19,7 @@ const backupRoutes = require("./routes/backup.routes");
 const errorHandler = require("./middleware/errorHandler");
 const pool = require("./database/pool");
 const { limiteGeral } = require("./middleware/limiters");
+const { estadoEmail } = require("./services/email.service");
 
 const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "[::1]"]);
 
@@ -79,7 +80,9 @@ function createApp() {
         pool.query("SELECT 1"),
         new Promise((_, rejeita) => setTimeout(() => rejeita(new Error("timeout")), 3000).unref()),
       ]);
-      res.json({ status: "ok", banco: "ok" });
+      // "email": estado do envio (smtp, resend, resend_remetente_de_teste, smtp_sem_remetente, sem_provedor).
+      // Sem segredos; deixa o "esqueci minha senha" quebrado de forma VISIVEL (antes falhava em silencio).
+      res.json({ status: "ok", banco: "ok", email: estadoEmail() });
     } catch (err) {
       res.status(503).json({ status: "indisponivel", banco: "falha" });
     }

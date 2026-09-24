@@ -20,6 +20,8 @@ Rodar na mão: `node scripts/smoke-producao.js` (produção) e `bash scripts/ver
 2. **`cd backend && npm audit --omit=dev`**: anotar moderadas novas; alta/crítica se corrige na hora.
 3. **Logs da API** (Railway/VM): procurar `[erro não tratado]`, `[email] falha` e picos de `429`/`401`.
 4. **E-mail de recuperação**: pedir "esqueci minha senha" com uma conta real e confirmar que o e-mail chega.
+   `GET /api/health/ready` mostra o estado (`"email":"smtp"` ou `"resend"` = ok; `resend_remetente_de_teste`,
+   `smtp_sem_remetente` ou `sem_provedor` = **não entrega a todos**) e o smoke test diário avisa quando não está ok.
 5. **Backup do banco**: conferir que o backup automático rodou e **restaurar em um banco de teste** de vez em quando.
 6. **CSP**: a política está **aplicada** (`frontend/vercel.json`). Abrir o site com o console aberto e ver se há
    avisos `Refused to ...`. Próximo endurecimento: remover `'unsafe-inline'` do `script-src` movendo os scripts
