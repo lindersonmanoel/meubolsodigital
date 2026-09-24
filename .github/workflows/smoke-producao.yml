@@ -1,0 +1,28 @@
+name: Fumaca em producao
+
+# Confere todo dia (e sob demanda) que o site e a API de producao estao no ar e configurados como
+# esperado. So' faz leituras: nao cria usuario nem grava dado. Se falhar, o GitHub avisa por e-mail.
+# Para outro ambiente, defina as variaveis FRONTEND_URL e API_URL em Settings > Secrets and variables > Actions > Variables.
+
+on:
+  schedule:
+    - cron: "17 9 * * *" # todo dia, 09:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      FRONTEND_URL: ${{ vars.FRONTEND_URL || 'https://meu-bolso-digital-web.vercel.app' }}
+      API_URL: ${{ vars.API_URL || 'https://backend-production-827d.up.railway.app' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Testes de fumaca (producao)
+        run: node scripts/smoke-producao.js

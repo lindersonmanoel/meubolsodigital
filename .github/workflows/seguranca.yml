@@ -1,0 +1,46 @@
+name: Revisao de seguranca periodica
+
+# Toda segunda-feira (e sempre que as dependencias do backend mudarem): audita as dependencias e
+# procura segredos versionados. Falha (e o GitHub avisa) se houver vulnerabilidade ALTA/CRITICA em
+# dependencia de producao ou algum segredo no repositorio. Vulnerabilidades moderadas sao listadas
+# no log sem reprovar. O roteiro completo da revisao mensal esta em SEGURANCA.md.
+
+on:
+  schedule:
+    - cron: "0 8 * * 1" # segunda-feira, 08:00 UTC
+  pull_request:
+    paths:
+      - "backend/package.json"
+      - "backend/package-lock.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dependencias:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - name: Vulnerabilidades moderadas (informativo)
+        run: npm audit --omit=dev || true
+      - name: Vulnerabilidades altas ou criticas (reprova)
+        run: npm audit --omit=dev --audit-level=high
+
+  segredos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Procurar segredos versionados
+        run: bash scripts/verificar-segredos.sh
