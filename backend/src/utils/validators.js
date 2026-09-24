@@ -13,6 +13,26 @@ function normalizeEmail(email) {
   return String(email || "").trim().toLowerCase();
 }
 
+// O bcrypt so' considera os primeiros 72 bytes da senha: aceitar mais que isso daria falsa seguranca.
+const SENHA_MIN = 8;
+const SENHA_MAX_BYTES = 72;
+const SENHAS_COMUNS = new Set([
+  "12345678", "123456789", "1234567890", "12341234", "11111111", "00000000", "87654321", "password",
+  "password1", "senha123", "senha1234", "senhasenha", "qwertyui", "qwerty123", "abc12345", "iloveyou",
+  "admin123", "brasil123", "mudar123", "123mudar", "minhasenha",
+]);
+
+/** Regras da senha nova (cadastro, troca e redefinicao). Devolve a mensagem de erro ou null. */
+function validarSenhaNova(senha) {
+  const texto = String(senha || "");
+  if (texto.length < SENHA_MIN) return "A senha precisa ter pelo menos 8 caracteres.";
+  if (Buffer.byteLength(texto, "utf8") > SENHA_MAX_BYTES) {
+    return "A senha pode ter no máximo 72 bytes (cerca de 72 caracteres; acentos e emojis ocupam mais).";
+  }
+  if (SENHAS_COMUNS.has(texto.toLowerCase())) return "Essa senha é muito comum. Escolha outra.";
+  return null;
+}
+
 function validateRegister({ nome, email, senha, confirmarSenha }) {
   const erros = {};
   const nomeLimpo = String(nome || "").trim();
@@ -23,9 +43,8 @@ function validateRegister({ nome, email, senha, confirmarSenha }) {
   if (!emailLimpo) erros.email = "O e-mail é obrigatório.";
   else if (emailLimpo.length > 160 || !EMAIL_RE.test(emailLimpo)) erros.email = "Informe um e-mail válido.";
 
-  const senhaStr = String(senha || "");
-  if (senhaStr.length < 8) erros.senha = "A senha precisa ter pelo menos 8 caracteres.";
-  else if (senhaStr.length > 200) erros.senha = "Senha muito longa.";
+  const erroSenha = validarSenhaNova(senha);
+  if (erroSenha) erros.senha = erroSenha;
 
   if (senha !== confirmarSenha) erros.confirmarSenha = "As senhas não coincidem.";
 
@@ -59,5 +78,5 @@ function validateNomeEmail(nome, email) {
 
 module.exports = {
   normalizeEmail, validateRegister, validateLogin, validateEsqueciSenha, validateNomeEmail,
-  EMAIL_RE, VALOR_MAXIMO,
+  validarSenhaNova, EMAIL_RE, VALOR_MAXIMO,
 };

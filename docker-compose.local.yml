@@ -8,7 +8,7 @@ services:
       - "127.0.0.1:3000:3000"
 
   ngrok:
-    image: ngrok/ngrok:latest
+    image: ngrok/ngrok:3
     container_name: meu-bolso-digital-ngrok
     restart: unless-stopped
     command: http backend:3000

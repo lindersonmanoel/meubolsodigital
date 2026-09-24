@@ -18,6 +18,11 @@ function errorHandler(err, _req, res, _next) {
   if (err && err.type === "entity.parse.failed") {
     return res.status(400).json({ erro: "JSON inválido no corpo da requisição." });
   }
+  // Violação de unicidade do PostgreSQL (23505): duas requisições simultâneas passaram na checagem
+  // "já existe?" e a segunda bateu no índice único. É conflito, não erro do servidor.
+  if (err && err.code === "23505") {
+    return res.status(409).json({ erro: "Esse registro já existe." });
+  }
   // Erro não mapeado: nunca vaza detalhe interno (consulta SQL, stack trace) para o cliente.
   // eslint-disable-next-line no-console
   console.error("[erro não tratado]", err);

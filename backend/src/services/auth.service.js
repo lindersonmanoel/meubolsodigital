@@ -10,6 +10,7 @@ const { CATEGORIAS_PADRAO } = require("../utils/categoriasPadrao");
 const passwordResetModel = require("../models/passwordReset.model");
 const emailService = require("./email.service");
 const { AppError } = require("../utils/errors");
+const { validarSenhaNova } = require("../utils/validators");
 
 // Em teste o custo minimo do bcrypt (4) deixa a suite bem mais rapida; producao segue com 12.
 const SALT_ROUNDS = config.isTest ? 4 : 12;
@@ -69,7 +70,8 @@ async function autenticar({ email, senha }) {
 
 async function trocarSenha(usuarioId, { senhaAtual, novaSenha, confirmarNovaSenha }) {
   const erros = {};
-  if (String(novaSenha || "").length < 8) erros.novaSenha = "A nova senha precisa ter pelo menos 8 caracteres.";
+  const erroNova = validarSenhaNova(novaSenha);
+  if (erroNova) erros.novaSenha = erroNova.replace(/^A senha/, "A nova senha");
   if (novaSenha !== confirmarNovaSenha) erros.confirmarNovaSenha = "As senhas não coincidem.";
   if (Object.keys(erros).length) throw new AppError("Dados inválidos.", 422, erros);
 
@@ -109,7 +111,8 @@ async function solicitarRecuperacaoSenha(email) {
 
 async function redefinirSenhaComToken(token, { novaSenha, confirmarNovaSenha }) {
   const erros = {};
-  if (String(novaSenha || "").length < 8) erros.novaSenha = "A nova senha precisa ter pelo menos 8 caracteres.";
+  const erroNova = validarSenhaNova(novaSenha);
+  if (erroNova) erros.novaSenha = erroNova.replace(/^A senha/, "A nova senha");
   if (novaSenha !== confirmarNovaSenha) erros.confirmarNovaSenha = "As senhas não coincidem.";
   if (Object.keys(erros).length) throw new AppError("Dados inválidos.", 422, erros);
 

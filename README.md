@@ -75,7 +75,7 @@ Sem Supabase: toda comunicação entre o frontend e o banco passa pela API do ba
   comprimidas (gzip).
 - Exportação em CSV protegida contra injeção de fórmula (um valor que comece com `=`, `+`,
   `-` ou `@` vem prefixado com apóstrofo, pra não virar fórmula executável se abrir no Excel).
-- Corpo de requisição limitado a 100 KB; erro de JSON malformado tratado (não derruba a API).
+- Corpo de requisição limitado a 1 MB; erro de JSON malformado tratado (não derruba a API).
 - Erros não mapeados nunca vazam detalhe interno (consulta SQL, stack trace) para o cliente.
 - Cada usuário só acessa os próprios dados: toda consulta ao banco já nasce filtrada pelo
   `usuario_id` extraído do token (`req.usuarioId`), nunca de um valor enviado pelo cliente.
@@ -108,12 +108,14 @@ MeuBolsoDigital/
 │   │   ├── app.js             monta o Express (usado pelos testes, sem abrir porta)
 │   │   ├── config.js          lê e valida as variáveis de ambiente
 │   │   └── server.js          ponto de entrada (sobe o servidor de verdade)
-│   ├── tests/                 Jest + Supertest (103 testes)
+│   ├── tests/                 Jest + Supertest (rode `npm test` pra ver a contagem)
 │   ├── .env.example
 │   └── package.json
-├── database/migrations/      SQL versionado (001_init.sql: usuários/categorias/movimentações/
-│                              metas; 002_recorrencias_orcamentos.sql: recorrências e
-│                              orçamentos; 003_perfil_foto_bio.sql: foto e bio do usuário)
+├── database/migrations/      SQL versionado, numerado em ordem (001_init.sql: usuários/categorias/
+│                              movimentações/metas; 002: recorrências e orçamentos; 003: foto e bio;
+│                              004: recuperação de senha; 005: categorias padrão; 006: versão do token
+│                              (sessões); 007/008: recorrência sem duplicar e sem perder meses; 009: e-mail
+│                              único sem diferenciar maiúsculas)
 ├── docker-compose.yml         PostgreSQL local pra desenvolvimento/teste
 ├── Dockerfile                 imagem de produção do backend (usada pelo Railway hoje)
 ├── docker-compose.prod.yml    stack alternativa pra VM própria (Postgres + backend + Cloudflare Tunnel)
@@ -208,7 +210,7 @@ node -e "require('dotenv').config({path:'.env.test'}); require('./src/database/m
 npm test
 ```
 
-89 testes (Jest + Supertest), rodando contra um PostgreSQL de teste de verdade. Cobre
+Testes automatizados (Jest + Supertest), rodando contra um PostgreSQL de teste de verdade. Cobre
 cadastro, login, troca de senha, validação de campos, hash de senha, rota protegida,
 atualização de perfil, categorias (incluindo o bloqueio de trocar tipo em uso), receitas/
 despesas/movimentações (com filtros e exportação CSV), recorrências (geração automática sem

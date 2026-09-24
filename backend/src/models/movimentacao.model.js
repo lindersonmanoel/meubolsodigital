@@ -23,7 +23,8 @@ function montarFiltro(usuarioId, filtros) {
   if (filtros.categoriaId) add("m.categoria_id = ?", filtros.categoriaId);
   if (filtros.inicio) add("m.data >= ?", filtros.inicio);
   if (filtros.fim) add("m.data <= ?", filtros.fim);
-  if (filtros.busca) add("m.descricao ILIKE ?", `%${filtros.busca}%`);
+  // Escapa \, % e _ do termo: senao "50%" ou "_" viravam curingas do LIKE e casavam com tudo.
+  if (filtros.busca) add("m.descricao ILIKE ? ESCAPE '\\'", `%${filtros.busca.replace(/[\\%_]/g, (c) => `\\${c}`)}%`);
   if (filtros.valorMin != null) add("m.valor >= ?", filtros.valorMin);
   if (filtros.valorMax != null) add("m.valor <= ?", filtros.valorMax);
 
