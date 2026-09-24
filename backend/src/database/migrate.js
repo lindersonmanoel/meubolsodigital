@@ -33,6 +33,9 @@ async function run() {
   }
 
   const client = await pool.connect();
+  // RAISE WARNING/NOTICE dentro de uma migracao (ex.: "existem duplicatas, indice nao criado") chega aqui como evento;
+  // sem este ouvinte o driver descarta a mensagem e o aviso nunca apareceria no log do deploy.
+  client.on("notice", (aviso) => console.warn(`[migrate] aviso do banco: ${aviso.message}`));
   try {
     // Uma migracao longa (ex.: preencher uma coluna em tabela grande) nao pode ser cortada pelo statement_timeout do pool.
     await client.query("SET statement_timeout = 0");
