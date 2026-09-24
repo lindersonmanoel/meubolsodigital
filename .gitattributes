@@ -1,0 +1,3 @@
+# Scripts de shell rodam em Linux (VM, Docker, GitHub Actions): precisam de fim de linha LF.
+# Com CRLF o bash falha ("set: pipefail: invalid option name").
+*.sh text eol=lf
