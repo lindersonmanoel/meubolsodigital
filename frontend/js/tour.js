@@ -14,15 +14,16 @@ const Tour = (function () {
   const PASSOS = [
     { pagina: "dashboard.html", seletor: ".grade-cartoes", titulo: "Seu resumo financeiro", texto: "Aqui você vê seu saldo atual, receitas, despesas e o resultado do mês, sempre atualizado." },
     { pagina: "dashboard.html", seletor: ".grafico-caixa", titulo: "Gráficos", texto: "Acompanhe receitas x despesas mês a mês e veja em quais categorias o dinheiro está indo." },
-    { pagina: "receitas.html", seletor: "#btn-nova", titulo: "Receitas", texto: "Aqui ficam suas entradas de dinheiro (salário, freelas...). Clique aqui pra cadastrar uma nova." },
-    { pagina: "despesas.html", seletor: "#btn-nova", titulo: "Despesas", texto: "Registre tudo o que sai da conta. Dá pra filtrar por categoria, período ou buscar por descrição." },
-    { pagina: "movimentacoes.html", seletor: "#btn-exportar", titulo: "Movimentações", texto: "Receitas e despesas juntas numa lista só, com filtros - e dá pra exportar tudo em CSV." },
-    { pagina: "recorrencias.html", seletor: "#btn-nova", titulo: "Recorrências", texto: "Cadastre contas fixas (aluguel, assinaturas, salário) e elas são lançadas sozinhas todo mês." },
-    { pagina: "orcamentos.html", seletor: "#btn-novo", titulo: "Orçamentos", texto: "Defina um limite de gasto mensal por categoria e receba um aviso quando estourar." },
-    { pagina: "categorias.html", seletor: "#btn-nova", titulo: "Categorias", texto: "Organize receitas e despesas em categorias, pra entender melhor pra onde vai seu dinheiro." },
+    { pagina: "receitas.html", seletor: "#btn-nova", titulo: "Receitas", texto: "Aqui ficam suas entradas de dinheiro (salário, freelas...). Clique para cadastrar uma nova; na categoria, dá para criar uma na hora." },
+    { pagina: "despesas.html", seletor: "#btn-nova", titulo: "Despesas", texto: "Registre tudo o que sai da conta. Dá para filtrar por categoria, período ou buscar por descrição, e exportar em CSV ou Excel." },
+    { pagina: "movimentacoes.html", seletor: "#btn-exportar", titulo: "Movimentações", texto: "Receitas e despesas juntas numa lista só, com filtros - e dá para exportar tudo em CSV ou Excel." },
+    { pagina: "recorrencias.html", seletor: "#btn-nova", titulo: "Recorrências", texto: "Cadastre contas fixas (aluguel, assinaturas, salário) e elas são lançadas sozinhas todo mês, inclusive os meses em que você não abriu o app." },
+    { pagina: "orcamentos.html", seletor: "#btn-novo", titulo: "Orçamentos", texto: "Defina um limite de gasto mensal por categoria e veja o alerta quando chegar perto do limite ou estourar." },
+    { pagina: "categorias.html", seletor: "#btn-nova", titulo: "Categorias", texto: "Organize receitas e despesas em categorias para entender para onde vai seu dinheiro. Também dá para criar uma direto no formulário de lançamento." },
     { pagina: "metas.html", seletor: "#btn-nova", titulo: "Metas", texto: "Defina um objetivo (uma viagem, uma reserva) e acompanhe o progresso até alcançar o valor." },
-    { pagina: "relatorios.html", seletor: "#btn-exportar-csv", titulo: "Relatórios", texto: "Veja o resumo de qualquer período e exporte em CSV ou PDF." },
-    { pagina: "configuracoes.html", seletor: "#cartao-instalar", titulo: "Configurações", texto: "Troque sua senha, atualize seu perfil e instale o app no seu dispositivo por aqui. Fim do tour!" },
+    { pagina: "relatorios.html", seletor: "#btn-exportar-csv", titulo: "Relatórios", texto: "Veja o resumo de qualquer período e exporte em CSV, PDF ou Excel completo (com várias abas)." },
+    { pagina: "configuracoes.html", seletor: "#cartao-backup", titulo: "Backup dos seus dados", texto: "Baixe uma cópia completa do que você cadastrou e restaure quando precisar. Guarde o arquivo em um lugar seguro." },
+    { pagina: "configuracoes.html", seletor: "#cartao-instalar", titulo: "Instale o app", texto: "Aqui você também troca sua senha, atualiza o perfil e vê as novidades. Instale o app no seu dispositivo por este cartão. Fim do tour!" },
   ];
 
   function paginaAtual() {

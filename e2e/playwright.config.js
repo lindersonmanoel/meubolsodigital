@@ -15,7 +15,7 @@ module.exports = defineConfig({
   reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
   use: { baseURL: "http://localhost:5500", trace: "retain-on-failure", serviceWorkers: "block" },
   projects: [
-    { name: "desktop", use: { ...devices["Desktop Chrome"] }, testMatch: /(fluxo|seguranca)\.spec\.js/ },
+    { name: "desktop", use: { ...devices["Desktop Chrome"] }, testMatch: /(fluxo|seguranca|descricoes)\.spec\.js/ },
     { name: "iphone", use: chromium("iPhone 13"), testMatch: /(fluxo|mobile)\.spec\.js/ },
     { name: "pixel", use: chromium("Pixel 5"), testMatch: /mobile\.spec\.js/ },
     { name: "estreito", use: { ...chromium("Pixel 5"), viewport: { width: 320, height: 640 } }, testMatch: /mobile\.spec\.js/ },

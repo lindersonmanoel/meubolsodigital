@@ -28,14 +28,16 @@ Sem Supabase: toda comunicação entre o frontend e o banco passa pela API do ba
   (categorias, movimentações, metas, orçamentos, recorrências) e restaure depois - útil se
   perder dados por engano. Restaurar nunca apaga o que já existe (categorias repetidas são
   reaproveitadas pelo nome; o resto é adicionado).
-- **Categorias**: criar, editar e excluir, separadas por tipo (receita/despesa). Não deixa
+- **Categorias**: criar (na aba Categorias ou direto no formulário de lançamento, com "+ Criar nova
+  categoria..."), editar e excluir, separadas por tipo (receita/despesa). Não deixa
   duplicar nome+tipo, nem trocar o tipo de uma categoria que já tem movimentação, recorrência
   ou orçamento ligados a ela (evita dado inconsistente).
 - **Receitas, despesas e movimentações**: cadastro com descrição, valor, data, categoria
   opcional e observação; edição; exclusão; filtros por tipo, categoria, período e busca por
   descrição; exportação em CSV.
 - **Recorrências**: contas fixas (aluguel, salário, assinaturas) com dia do mês pra lançar -
-  a movimentação do mês é gerada sozinha (sem duplicar) sempre que o dashboard é aberto.
+  a movimentação do mês é gerada sozinha (sem duplicar) sempre que o dashboard é aberto, inclusive
+  dos meses em que você não abriu o app (até 12 meses); um lançamento que você apagou não volta.
 - **Orçamentos**: limite de gasto mensal por categoria, com o quanto já foi gasto no mês,
   percentual e aviso quando fica perto ou passa do limite.
 - **Dashboard**: saldo atual, receitas/despesas/resultado do mês, gráfico de barras (receitas
@@ -52,6 +54,9 @@ Sem Supabase: toda comunicação entre o frontend e o banco passa pela API do ba
   navegador oferece o instalador nativo, e passo a passo manual pra cada plataforma (inclui
   iPhone/iPad no Safari, que não tem instalador automático) - aparece no login, no cadastro e
   no dashboard. Funciona offline pra abrir rápido (nunca guarda dados financeiros em cache).
+- **Novidades do app**: Configurações mostra a versão atual e o que mudou nas últimas atualizações
+  (mesma fonte do aviso de atualização, `frontend/js/versao.js`). Como manter as descrições do app em dia:
+  ver `CONTRIBUINDO.md`.
 - **Tour guiado**: botão "?" sempre visível no topo, mostra uma explicação de cada tela
   principal, com destaque visual no elemento e navegação entre as páginas.
 - **Aviso de atualização automática**: quando uma versão nova do app é publicada, quem já

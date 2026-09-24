@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Configurações | Meu Bolso Digital</title>
+<meta name="description" content="Atualize seu perfil e senha, baixe ou restaure o backup dos seus dados e instale o app no celular ou computador.">
 <link rel="icon" href="assets/images/logo-icon.png">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0d3b66">
@@ -21,7 +22,7 @@
     <div class="barra-topo-pagina">
       <div>
         <h1>Configurações</h1>
-        <p class="hint">Seus dados e sua senha.</p>
+        <p class="hint">Seu perfil, sua senha, o backup dos seus dados, a instalação do app e as novidades.</p>
       </div>
     </div>
 
@@ -183,6 +184,12 @@
       </div>
     </section>
 
+    <section class="card" style="margin-bottom:20px;max-width:640px" id="cartao-novidades">
+      <h2>Novidades do app</h2>
+      <p class="hint" style="margin-bottom:12px">Você está na versão <strong id="versao-atual"></strong>. Veja o que mudou nas últimas atualizações:</p>
+      <div id="lista-novidades"></div>
+    </section>
+
     <section class="card" style="max-width:520px">
       <h2>Sair da conta</h2>
       <p class="hint">Encerra sua sessão neste dispositivo.</p>
@@ -196,10 +203,12 @@
   <script src="js/shell.js"></script>
   <script src="js/tour.js"></script>
   <script src="js/versao.js"></script>
+  <script src="js/novidades.js"></script>
   <script src="js/pwa.js"></script>
   <script>
     Sessao.exigirLogin();
     montarShell("configuracoes");
+    if (typeof renderizarNovidades === "function") renderizarNovidades();
 
     const formPerfil = document.getElementById("form-perfil");
     const erroPerfil = document.getElementById("erro-perfil");

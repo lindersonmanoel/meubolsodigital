@@ -148,3 +148,8 @@
   .categoria-rapida-linha input { flex: 1 1 100%; }
   .categoria-rapida-linha .btn { flex: 1 1 0; }
 }
+
+/* Cartao "Novidades do app" (js/novidades.js) */
+.novidade-item { margin-bottom: 14px; }
+.novidade-item ul { margin: 6px 0 0; padding-left: 20px; }
+.novidade-item li { margin-bottom: 4px; }
