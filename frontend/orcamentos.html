@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Orçamentos | Meu Bolso Digital</title>
+<meta name="description" content="Limite de gasto por categoria, quanto sobra da renda do mês e calculadora para saber em quanto tempo você quita suas dívidas.">
 <link rel="icon" href="assets/images/logo-icon.png">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0d3b66">
@@ -21,7 +22,7 @@
     <div class="barra-topo-pagina">
       <div>
         <h1>Orçamentos</h1>
-        <p class="hint">Defina um limite mensal de gasto por categoria e acompanhe o quanto já usou.</p>
+        <p class="hint">Defina limites de gasto por categoria, veja quanto sobra da sua renda no mês e simule em quanto tempo você quita suas dívidas.</p>
       </div>
       <button type="button" class="btn btn-primario" id="btn-novo" style="width:auto;padding:10px 18px">+ Novo orçamento</button>
     </div>
@@ -51,14 +52,27 @@
       </form>
     </section>
 
+    <section class="cartao-resumo-orcamento" id="resumo-orcamento" hidden aria-live="polite">
+      <h2>Resumo do mês</h2>
+      <div class="resumo-orcamento-grade">
+        <div><span class="hint">Receitas do mês</span><strong id="resumo-receitas">-</strong></div>
+        <div><span class="hint">Soma dos limites</span><strong id="resumo-limites">-</strong></div>
+        <div><span class="hint">Sobra para dívidas e metas</span><strong id="resumo-sobra">-</strong></div>
+      </div>
+      <p class="hint" id="resumo-dica"></p>
+    </section>
+
     <div id="lista-orcamentos"></div>
     <p class="vazio" id="lista-vazia" hidden>Você ainda não tem orçamentos. Crie o primeiro acima.</p>
     <p class="spinner-carregando" id="carregando">Carregando...</p>
+
+    <section class="painel-formulario" id="calculadora-quitacao"></section>
   </template>
 
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/categoria-rapida.js"></script>
+  <script src="js/quitacao.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/shell.js"></script>
   <script src="js/tour.js"></script>
@@ -156,6 +170,37 @@
       }
     }
 
+    const calculadora = Quitacao.iniciarCalculadora(document.getElementById("calculadora-quitacao"));
+
+    /** Receitas do mes (relatorio de 1o ao ultimo dia) menos a soma dos limites = sobra. Falha aqui nao derruba a lista. */
+    async function atualizarResumo(orcamentos) {
+      const limites = orcamentos.reduce((soma, o) => soma + Number(o.valor_limite || 0), 0);
+      const hoje = new Date();
+      const doisDigitos = (n) => String(n).padStart(2, "0");
+      const prefixo = `${hoje.getFullYear()}-${doisDigitos(hoje.getMonth() + 1)}`;
+      const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate();
+      let receitas = null;
+      try {
+        const r = await Api.relatorio({ inicio: `${prefixo}-01`, fim: `${prefixo}-${doisDigitos(ultimoDia)}` });
+        receitas = Number(r.totalReceitas) || 0;
+      } catch (e) { /* sem receitas: a calculadora pede o valor manualmente */ }
+
+      const resumo = document.getElementById("resumo-orcamento");
+      resumo.hidden = receitas === null;
+      if (receitas !== null) {
+        const sobra = Math.round((receitas - limites) * 100) / 100;
+        document.getElementById("resumo-receitas").textContent = formatarMoeda(receitas);
+        document.getElementById("resumo-limites").textContent = formatarMoeda(limites);
+        const elSobra = document.getElementById("resumo-sobra");
+        elSobra.textContent = formatarMoeda(sobra);
+        elSobra.className = sobra < 0 ? "valor-despesa" : "valor-receita";
+        document.getElementById("resumo-dica").textContent = sobra < 0
+          ? "Seus limites somam mais do que você recebe neste mês. Reduza algum limite ou aumente as receitas."
+          : "É o que sobra das receitas do mês depois de reservar todos os limites. Use na calculadora abaixo para quitar dívidas.";
+      }
+      calculadora.atualizarSobra({ receitas, limites });
+    }
+
     async function carregarLista() {
       mostrarErro(erroGeral, "");
       carregando.hidden = false;
@@ -164,6 +209,7 @@
         listaOrcamentos.innerHTML = "";
         orcamentos.forEach((o) => listaOrcamentos.appendChild(cartaoOrcamento(o)));
         listaVazia.hidden = orcamentos.length > 0;
+        await atualizarResumo(orcamentos);
       } catch (err) {
         if (err.status === 401) { Sessao.encerrar(); window.location.href = "login.html"; return; }
         mostrarErro(erroGeral, err.message);
