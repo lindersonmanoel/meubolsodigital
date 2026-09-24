@@ -58,6 +58,7 @@
 
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/categoria-rapida.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/shell.js"></script>
   <script src="js/tour.js"></script>
@@ -85,11 +86,16 @@
       try {
         const { categorias } = await Api.listarCategorias();
         const despesas = categorias.filter((c) => c.tipo === "despesa");
-        selectCategoria.innerHTML = despesas.length
+        selectCategoria.innerHTML = (despesas.length
           ? despesas.map((c) => `<option value="${c.id}">${escaparHtml(c.nome)}</option>`).join("")
-          : '<option value="">Crie uma categoria de despesa primeiro</option>';
+          : '<option value="">Escolha uma categoria de despesa</option>') + CategoriaRapida.opcao();
       } catch (e) { /* segue sem categorias */ }
     }
+    CategoriaRapida.ligar({
+      select: selectCategoria,
+      obterTipo: () => "despesa", // orcamento so' faz sentido pra categoria de despesa
+      aoCriar: () => popularCategorias(),
+    });
 
     function abrirFormulario(orcamento) {
       form.reset();

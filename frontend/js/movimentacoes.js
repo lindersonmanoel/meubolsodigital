@@ -65,8 +65,9 @@ function iniciarPaginaMovimentacoes(opcoes) {
     const tipoAtual = tipoFixo || document.getElementById("tipo").value || "despesa";
     const relevantes = categorias.filter((c) => c.tipo === tipoAtual);
     selectCategoria.innerHTML =
-      `<option value="">${relevantes.length ? "Sem categoria" : "Sem categoria (crie categorias na aba Categorias)"}</option>` +
-      relevantes.map((c) => `<option value="${c.id}">${escaparHtml(c.nome)}</option>`).join("");
+      '<option value="">Sem categoria</option>' +
+      relevantes.map((c) => `<option value="${c.id}">${escaparHtml(c.nome)}</option>`).join("") +
+      CategoriaRapida.opcao();
 
     if (selectFiltroCategoria) {
       selectFiltroCategoria.innerHTML =
@@ -80,6 +81,13 @@ function iniciarPaginaMovimentacoes(opcoes) {
     div.textContent = texto;
     return div.innerHTML;
   }
+
+  // "+ Criar nova categoria..." no proprio campo (antes: so' um aviso pra criar na aba Categorias)
+  CategoriaRapida.ligar({
+    select: selectCategoria,
+    obterTipo: () => tipoFixo || document.getElementById("tipo").value || "despesa",
+    aoCriar: (categoria) => { categorias.push(categoria); popularSelectsCategoria(); },
+  });
 
   function abrirFormulario(mov) {
     form.reset();

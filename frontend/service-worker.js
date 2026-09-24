@@ -31,6 +31,7 @@ const ARQUIVOS_ESSENCIAIS = [
   "css/print.css",
   "js/config.js",
   "js/api.js",
+  "js/categoria-rapida.js",
   "js/auth.js",
   "js/shell.js",
   "js/movimentacoes.js",

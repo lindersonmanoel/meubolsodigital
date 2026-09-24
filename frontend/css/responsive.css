@@ -137,3 +137,14 @@
 @media (max-width: 600px) {
   .forma-topo-direita { width: 18vw; height: 18vw; top: -9vw; right: -7vw; }
 }
+
+/* Criacao rapida de categoria dentro dos formularios (js/categoria-rapida.js) */
+.categoria-rapida { margin-top: 8px; }
+.categoria-rapida-linha { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+.categoria-rapida-linha input { flex: 1 1 160px; min-width: 0; }
+.categoria-rapida-linha .btn { width: auto; padding: 8px 14px; }
+@media (max-width: 600px) {
+  /* celular: o nome ocupa a linha toda e "Criar"/"Cancelar" ficam lado a lado (antes o Cancelar quebrava sozinho) */
+  .categoria-rapida-linha input { flex: 1 1 100%; }
+  .categoria-rapida-linha .btn { flex: 1 1 0; }
+}
