@@ -16,6 +16,10 @@ ENV NODE_ENV=production
 EXPOSE 3000
 USER node
 
+# Saudavel = processo de pe E banco respondendo (/api/health/ready). Alpine ja traz o wget (busybox).
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
+  CMD wget -qO- http://127.0.0.1:${PORT:-3000}/api/health/ready >/dev/null || exit 1
+
 # Aplica migracoes pendentes a cada deploy (idempotente) e sobe a API. ";" e nao "&&" de
 # proposito: se uma migracao falhar, a API antiga continua de pe (o erro fica no log).
 CMD ["sh", "-c", "node src/database/migrate.js; exec node src/server.js"]

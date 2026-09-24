@@ -417,12 +417,14 @@ describe("saude e rotas desconhecidas", () => {
     expect(res.body.erro).toBeDefined();
   });
 
-  test("token valido mas de usuario que nao existe mais: 404, nao 500", async () => {
+  test("token valido mas de usuario que nao existe mais: 401 (sessao recusada na porta), nunca 500", async () => {
+    // Antes a requisicao passava pelo middleware e so' a rota respondia 404. Agora o middleware
+    // confere no banco que o usuario existe (junto com a versao do token) e recusa a sessao.
     const jwt = require("jsonwebtoken");
     const config = require("../src/config");
     const tokenOrfao = jwt.sign({ sub: "999999" }, config.jwtSecret, { expiresIn: "1h" });
     const res = await request(app).get("/api/auth/me").set("Authorization", `Bearer ${tokenOrfao}`);
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(401);
   });
 
   test("JSON malformado no corpo devolve 400 com mensagem, nao 500", async () => {

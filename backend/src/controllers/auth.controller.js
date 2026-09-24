@@ -129,8 +129,9 @@ async function updateMe(req, res, next) {
 
 async function trocarSenha(req, res, next) {
   try {
-    await authService.trocarSenha(req.usuarioId, req.body || {});
-    return res.json({ mensagem: "Senha atualizada com sucesso." });
+    const { token } = await authService.trocarSenha(req.usuarioId, req.body || {});
+    // token novo: o antigo (desta sessao e das demais) deixou de valer com a troca de senha.
+    return res.json({ mensagem: "Senha atualizada com sucesso.", token });
   } catch (err) {
     return next(err);
   }

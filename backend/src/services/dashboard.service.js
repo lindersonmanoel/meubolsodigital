@@ -3,11 +3,10 @@
 const movimentacaoModel = require("../models/movimentacao.model");
 const recorrenciaService = require("./recorrencia.service");
 const { dataValida } = require("../utils/datas");
+const { inicioDoMesAtual } = require("../utils/fuso");
 
 function periodoDoMesAtual() {
-  const agora = new Date();
-  const inicio = new Date(Date.UTC(agora.getUTCFullYear(), agora.getUTCMonth(), 1));
-  return { inicio: inicio.toISOString().slice(0, 10) };
+  return { inicio: inicioDoMesAtual() }; // primeiro dia do mes no fuso do app
 }
 
 async function resumo(usuarioId) {

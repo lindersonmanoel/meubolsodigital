@@ -4,6 +4,7 @@ const recorrenciaModel = require("../models/recorrencia.model");
 const movimentacaoModel = require("../models/movimentacao.model");
 const categoriaModel = require("../models/categoria.model");
 const { AppError } = require("../utils/errors");
+const { partesNoFuso } = require("../utils/fuso");
 
 const TIPOS_VALIDOS = ["receita", "despesa"];
 
@@ -70,13 +71,13 @@ async function remover(usuarioId, id) {
  * lista de movimentacoes - nao precisa de agendador/cron separado, so' "preenche a lacuna" na
  * primeira vez que alguem olha o app depois da virada do mes.
  */
-async function gerarDoMesAtual(usuarioId) {
+async function gerarDoMesAtual(usuarioId, agora = new Date()) {
   const ativas = await recorrenciaModel.listarAtivas(usuarioId);
   if (!ativas.length) return [];
 
-  const agora = new Date();
-  const anoMes = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, "0")}`;
-  const diaHoje = agora.getDate();
+  // Mes/dia no fuso do app (America/Sao_Paulo), nao no do servidor (UTC).
+  const { ano, mes, dia: diaHoje } = partesNoFuso(agora);
+  const anoMes = `${ano}-${String(mes).padStart(2, "0")}`;
 
   const geradas = [];
   for (const recorrencia of ativas) {
@@ -92,7 +93,8 @@ async function gerarDoMesAtual(usuarioId) {
       valor: recorrencia.valor,
       data,
     });
-    geradas.push(movimentacao);
+    // null = outra requisicao gerou a mesma recorrencia/mes ao mesmo tempo (indice unico): nada a fazer.
+    if (movimentacao) geradas.push(movimentacao);
   }
   return geradas;
 }

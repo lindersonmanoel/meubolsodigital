@@ -12,7 +12,9 @@ const SELECT_COM_GASTO = `
     LEFT JOIN (
       SELECT categoria_id, SUM(valor) AS total
         FROM movimentacoes
-       WHERE usuario_id = $1 AND tipo = 'despesa' AND date_trunc('month', data) = date_trunc('month', now())
+       WHERE usuario_id = $1 AND tipo = 'despesa'
+         AND data >= date_trunc('month', now() AT TIME ZONE 'America/Sao_Paulo')::date
+         AND data < (date_trunc('month', now() AT TIME ZONE 'America/Sao_Paulo') + interval '1 month')::date
        GROUP BY categoria_id
     ) g ON g.categoria_id = o.categoria_id
 `;

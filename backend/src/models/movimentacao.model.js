@@ -96,10 +96,13 @@ async function existeGeradaNoMes(usuarioId, recorrenciaId, anoMes) {
 /** Cria a movimentacao do mes a partir de uma recorrencia (receita/despesa fixa). */
 async function criarDeRecorrencia(usuarioId, { recorrenciaId, categoriaId, tipo, descricao, valor, data }) {
   const { rows } = await pool.query(
+    // ON CONFLICT DO NOTHING: com o indice unico (recorrencia + mes) da migracao 007, uma segunda
+    // requisicao simultanea nao duplica o lancamento - devolve null.
     `INSERT INTO movimentacoes (usuario_id, categoria_id, tipo, descricao, valor, data, recorrencia_id)
-     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+     VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT DO NOTHING RETURNING id`,
     [usuarioId, categoriaId || null, tipo, descricao, valor, data, recorrenciaId]
   );
+  if (!rows[0]) return null;
   return buscarPorId(usuarioId, rows[0].id);
 }
 
@@ -135,14 +138,14 @@ async function porMes(usuarioId, meses = 6) {
     `SELECT to_char(serie.mes, 'YYYY-MM') AS mes,
             COALESCE(r.total, 0)::float8 AS receitas,
             COALESCE(d.total, 0)::float8 AS despesas
-       FROM generate_series(date_trunc('month', now()) - ($2::int - 1) * interval '1 month',
-                             date_trunc('month', now()), interval '1 month') AS serie(mes)
+       FROM generate_series(date_trunc('month', now() AT TIME ZONE 'America/Sao_Paulo') - ($2::int - 1) * interval '1 month',
+                             date_trunc('month', now() AT TIME ZONE 'America/Sao_Paulo'), interval '1 month') AS serie(mes)
        LEFT JOIN (
-         SELECT date_trunc('month', data) AS mes, SUM(valor) AS total
+         SELECT date_trunc('month', data::timestamp) AS mes, SUM(valor) AS total
            FROM movimentacoes WHERE usuario_id = $1 AND tipo = 'receita' GROUP BY 1
        ) r ON r.mes = serie.mes
        LEFT JOIN (
-         SELECT date_trunc('month', data) AS mes, SUM(valor) AS total
+         SELECT date_trunc('month', data::timestamp) AS mes, SUM(valor) AS total
            FROM movimentacoes WHERE usuario_id = $1 AND tipo = 'despesa' GROUP BY 1
        ) d ON d.mes = serie.mes
        ORDER BY serie.mes`,

@@ -17,6 +17,8 @@ const recorrenciaRoutes = require("./routes/recorrencia.routes");
 const orcamentoRoutes = require("./routes/orcamento.routes");
 const backupRoutes = require("./routes/backup.routes");
 const errorHandler = require("./middleware/errorHandler");
+const pool = require("./database/pool");
+const { limiteGeral } = require("./middleware/limiters");
 
 const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "[::1]"]);
 
@@ -26,7 +28,7 @@ const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "[::1]"]);
 // abrir o frontend por qualquer um dos dois sem precisar bater exatamente com o .env.
 function corsOrigin(origin, callback) {
   if (!origin) return callback(null, true); // sem Origin: curl, apps mobile, etc.
-  if (origin === config.frontendUrl) return callback(null, true);
+  if (config.frontendUrls.includes(origin)) return callback(null, true);
   if (!config.isProduction) {
     try {
       if (LOCAL_HOSTNAMES.has(new URL(origin).hostname)) return callback(null, true);
@@ -65,9 +67,26 @@ function createApp() {
     app.use(morgan(config.isProduction ? "combined" : "dev"));
   }
 
+  // Liveness: o processo esta de pe (nao consulta o banco).
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok", ambiente: config.nodeEnv });
   });
+
+  // Readiness: alem do processo, o banco responde (usado pelo healthcheck do Docker).
+  app.get("/api/health/ready", async (_req, res) => {
+    try {
+      await Promise.race([
+        pool.query("SELECT 1"),
+        new Promise((_, rejeita) => setTimeout(() => rejeita(new Error("timeout")), 3000).unref()),
+      ]);
+      res.json({ status: "ok", banco: "ok" });
+    } catch (err) {
+      res.status(503).json({ status: "indisponivel", banco: "falha" });
+    }
+  });
+
+  // Teto geral por IP em toda a API (health fica de fora, definido acima).
+  app.use("/api", limiteGeral);
 
   app.use("/api/auth", authRoutes);
   app.use("/api/users", userRoutes);

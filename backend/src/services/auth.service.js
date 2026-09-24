@@ -26,8 +26,19 @@ class AuthError extends AppError {
   }
 }
 
-function assinarToken(usuario) {
-  return jwt.sign({ sub: String(usuario.id) }, config.jwtSecret, { expiresIn: config.jwtExpiresIn });
+// Algoritmo fixado na assinatura E na verificacao (nao aceita o que o cabecalho do token disser).
+const JWT_ALGORITMO = "HS256";
+
+// Hash de uma senha qualquer: o login compara contra ele quando o e-mail nao existe, pra gastar o
+// mesmo tempo de bcrypt e nao revelar (pelo tempo de resposta) quais e-mails tem conta.
+const HASH_FALSO = bcrypt.hashSync("senha-que-nao-pertence-a-ninguem", SALT_ROUNDS);
+
+/** tokenVersion: versao do token do usuario; trocar a senha incrementa e invalida os tokens antigos. */
+function assinarToken(usuario, tokenVersion = 0) {
+  return jwt.sign({ sub: String(usuario.id), tv: tokenVersion }, config.jwtSecret, {
+    algorithm: JWT_ALGORITMO,
+    expiresIn: config.jwtExpiresIn,
+  });
 }
 
 async function registrar({ nome, email, senha }) {
@@ -46,13 +57,13 @@ async function autenticar({ email, senha }) {
   const credenciaisInvalidas = () => new AuthError("E-mail ou senha inválidos.", 401);
 
   const registro = await userModel.findByEmail(email);
-  if (!registro) throw credenciaisInvalidas();
 
-  const confere = await bcrypt.compare(senha, registro.senha_hash);
-  if (!confere) throw credenciaisInvalidas();
+  // Sempre roda o bcrypt (contra um hash falso se a conta nao existe): tempo de resposta igual.
+  const confere = await bcrypt.compare(senha, registro ? registro.senha_hash : HASH_FALSO);
+  if (!registro || !confere) throw credenciaisInvalidas();
 
   const usuario = { id: registro.id, nome: registro.nome, email: registro.email };
-  const token = assinarToken(usuario);
+  const token = assinarToken(usuario, registro.token_version);
   return { usuario, token };
 }
 
@@ -68,7 +79,9 @@ async function trocarSenha(usuarioId, { senhaAtual, novaSenha, confirmarNovaSenh
   if (!confere) throw new AppError("Senha atual incorreta.", 401, { senhaAtual: "Senha atual incorreta." });
 
   const senhaHash = await bcrypt.hash(novaSenha, SALT_ROUNDS);
-  await userModel.updateSenhaHash(usuarioId, senhaHash);
+  const novaVersao = await userModel.updateSenhaHash(usuarioId, senhaHash);
+  // Os tokens antigos (inclusive o desta sessao) deixaram de valer: devolve um novo pra sessao atual.
+  return { token: assinarToken({ id: usuarioId }, novaVersao) };
 }
 
 async function solicitarRecuperacaoSenha(email) {
@@ -86,7 +99,12 @@ async function solicitarRecuperacaoSenha(email) {
   await passwordResetModel.criar({ usuarioId: usuario.id, tokenHash: hashToken(token), expiraEm });
 
   const link = `${config.frontendUrl}/redefinir-senha.html?token=${token}`;
-  await emailService.enviarRecuperacaoSenha({ para: usuario.email, nome: usuario.nome, link });
+  // Nao espera o envio terminar: o tempo de resposta nao pode diferenciar conta existente de
+  // inexistente (a chamada do e-mail e' lenta). A falha, se houver, e' registrada no log.
+  Promise.resolve(emailService.enviarRecuperacaoSenha({ para: usuario.email, nome: usuario.nome, link })).catch((err) => {
+    // eslint-disable-next-line no-console
+    console.error("[email] erro inesperado ao enviar recuperação:", err && err.message);
+  });
 }
 
 async function redefinirSenhaComToken(token, { novaSenha, confirmarNovaSenha }) {
@@ -103,13 +121,17 @@ async function redefinirSenhaComToken(token, { novaSenha, confirmarNovaSenha }) 
   await passwordResetModel.marcarUsado(registro.id);
 }
 
-function verificarToken(token) {
+/** Le e valida a assinatura/validade do token. Devolve o payload ({ sub, tv, ... }). */
+function decodificarToken(token) {
   try {
-    const payload = jwt.verify(token, config.jwtSecret);
-    return payload.sub;
+    return jwt.verify(token, config.jwtSecret, { algorithms: [JWT_ALGORITMO] });
   } catch (err) {
     throw new AuthError("Sessão inválida ou expirada. Faça login novamente.", 401);
   }
+}
+
+function verificarToken(token) {
+  return decodificarToken(token).sub;
 }
 
 module.exports = {
@@ -117,6 +139,7 @@ module.exports = {
   registrar,
   autenticar,
   verificarToken,
+  decodificarToken,
   assinarToken,
   trocarSenha,
   solicitarRecuperacaoSenha,

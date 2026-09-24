@@ -40,7 +40,11 @@ function buildConfig() {
     databaseSslCa: process.env.DATABASE_SSL_CA ? process.env.DATABASE_SSL_CA.replace(/\\n/g, "\n") : "",
     jwtSecret,
     jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
-    frontendUrl: process.env.FRONTEND_URL || "http://localhost:5500",
+    // FRONTEND_URL aceita varias origens separadas por virgula (ex.: dominio novo + endereco antigo
+    // durante uma migracao). A PRIMEIRA e' a principal (usada no link do e-mail de recuperacao).
+    frontendUrls: (process.env.FRONTEND_URL || "http://localhost:5500")
+      .split(",").map((u) => u.trim().replace(/\/+$/, "")).filter(Boolean),
+    frontendUrl: (process.env.FRONTEND_URL || "http://localhost:5500").split(",")[0].trim().replace(/\/+$/, ""),
     // Em teste desligado por padrao: os testes criam as proprias categorias e assumem conta vazia.
     categoriasPadrao: boolFromEnv(process.env.SEED_CATEGORIAS_PADRAO, nodeEnv !== "test"),
     resendApiKey: process.env.RESEND_API_KEY || "",

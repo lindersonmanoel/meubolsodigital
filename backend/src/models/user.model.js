@@ -32,12 +32,21 @@ async function updateProfile(id, { nome, email, bio, fotoUrl }) {
   return rows[0] || null;
 }
 
+/** Troca o hash e incrementa token_version: todos os tokens (JWT) emitidos antes deixam de valer.
+ * Devolve a nova versao (pra emitir um token novo pra sessao atual) ou null se o usuario nao existe. */
 async function updateSenhaHash(id, senhaHash) {
-  const { rowCount } = await pool.query(
-    "UPDATE usuarios SET senha_hash = $1, atualizado_em = now() WHERE id = $2",
+  const { rows } = await pool.query(
+    `UPDATE usuarios SET senha_hash = $1, token_version = token_version + 1, atualizado_em = now()
+      WHERE id = $2 RETURNING token_version`,
     [senhaHash, id]
   );
-  return rowCount > 0;
+  return rows[0] ? rows[0].token_version : null;
 }
 
-module.exports = { findByEmail, findById, create, updateProfile, updateSenhaHash };
+/** Versao atual do token do usuario (null se o usuario nao existe mais). */
+async function tokenVersion(id) {
+  const { rows } = await pool.query("SELECT token_version FROM usuarios WHERE id = $1", [id]);
+  return rows[0] ? rows[0].token_version : null;
+}
+
+module.exports = { findByEmail, findById, create, updateProfile, updateSenhaHash, tokenVersion };
