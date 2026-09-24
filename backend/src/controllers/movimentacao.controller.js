@@ -1,7 +1,7 @@
 "use strict";
 
 const service = require("../services/movimentacao.service");
-const { paraCsv } = require("../utils/csv");
+const { paraCsv, decimalBR } = require("../utils/csv");
 const { gerarExcelMovimentacoes } = require("../utils/excel");
 const { paraDataISO } = require("../utils/datas");
 
@@ -20,7 +20,7 @@ const COLUNAS_CSV = [
   { chave: "tipo", rotulo: "Tipo" },
   { chave: "descricao", rotulo: "Descrição" },
   { chave: "categoria_nome", rotulo: "Categoria" },
-  { chave: "valor", rotulo: "Valor" },
+  { chave: "valor", rotulo: "Valor", formato: decimalBR, numerico: true },
   { chave: "observacao", rotulo: "Observação" },
 ];
 

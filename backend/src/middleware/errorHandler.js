@@ -7,6 +7,7 @@ function errorHandler(err, _req, res, _next) {
   if (err instanceof AppError) {
     const body = { erro: err.message };
     if (err.campos) body.campos = err.campos;
+    if (err.detalhes) body.detalhes = err.detalhes; // dados extras seguros (ex.: contagem de uso de uma categoria)
     return res.status(err.statusCode).json(body);
   }
   if (err && err.message === "Origem não permitida pelo CORS.") {

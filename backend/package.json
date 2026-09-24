@@ -15,7 +15,7 @@
     "test": "jest --runInBand"
   },
   "dependencies": {
-    "bcryptjs": "^2.4.3",
+    "@node-rs/bcrypt": "^1.10.9",
     "compression": "^1.8.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -30,6 +30,7 @@
     "resend": "^6.28.1"
   },
   "devDependencies": {
+    "bcryptjs": "^2.4.3",
     "jest": "^29.7.0",
     "supertest": "^7.0.0"
   },

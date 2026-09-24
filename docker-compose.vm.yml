@@ -33,5 +33,25 @@ services:
       postgres:
         condition: service_healthy
 
+  # Backup diario do PostgreSQL (scripts/backup-loop.sh): dump comprimido em ./backups, guarda 14 dias.
+  # COPIE ./backups para fora desta maquina de vez em quando (outro disco/nuvem).
+  backup:
+    image: postgres:16-alpine
+    container_name: meu-bolso-digital-backup-vm
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGHOST: postgres
+      PGUSER: mbd
+      PGDATABASE: meu_bolso_digital
+      PGPASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env.production}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
+    volumes:
+      - ./backups:/backups
+      - ./scripts/backup-loop.sh:/backup-loop.sh:ro
+    entrypoint: ["sh", "/backup-loop.sh"]
+
 volumes:
   mbd_pgdata_vm:

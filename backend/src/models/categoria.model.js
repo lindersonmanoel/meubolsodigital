@@ -74,4 +74,16 @@ async function emUso(usuarioId, id) {
   return r.movimentacao || r.recorrencia || r.orcamento;
 }
 
-module.exports = { listar, buscarPorId, existeComNome, criar, criarVarias, atualizar, remover, emUso };
+/** Quantos itens usam a categoria (movimentacoes, recorrencias e orcamentos), pra avisar antes de excluir. */
+async function contarUso(usuarioId, id) {
+  const { rows } = await pool.query(
+    `SELECT
+       (SELECT count(*) FROM movimentacoes WHERE usuario_id = $1 AND categoria_id = $2)::int AS movimentacoes,
+       (SELECT count(*) FROM recorrencias WHERE usuario_id = $1 AND categoria_id = $2)::int AS recorrencias,
+       (SELECT count(*) FROM orcamentos WHERE usuario_id = $1 AND categoria_id = $2)::int AS orcamentos`,
+    [usuarioId, id]
+  );
+  return rows[0];
+}
+
+module.exports = { listar, buscarPorId, existeComNome, criar, criarVarias, atualizar, remover, emUso, contarUso };

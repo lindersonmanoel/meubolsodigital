@@ -1,7 +1,7 @@
 "use strict";
 
 const crypto = require("crypto");
-const bcrypt = require("bcryptjs");
+const bcrypt = require("../utils/senha"); // bcrypt nativo (ver utils/senha.js)
 const jwt = require("jsonwebtoken");
 const config = require("../config");
 const userModel = require("../models/user.model");

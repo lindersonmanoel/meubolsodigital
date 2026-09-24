@@ -110,7 +110,8 @@ describe("regras da senha nova (SEG-07)", () => {
   });
 
   test("quem ja tem senha antiga longa (ate 200) continua conseguindo entrar", async () => {
-    // contas criadas antes desta regra podem ter senha > 72 bytes; o bcrypt compara so' os 72 primeiros
+    // contas criadas antes desta regra podem ter senha > 72 bytes; o bcrypt compara so' os 72 primeiros.
+    // O hash e' gerado com o bcryptjs (biblioteca ANTIGA): prova que o bcrypt nativo le os hashes ja gravados.
     const bcrypt = require("bcryptjs");
     const senha = "s".repeat(150);
     const hash = await bcrypt.hash(senha, 4);

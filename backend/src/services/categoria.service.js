@@ -54,7 +54,21 @@ async function atualizar(usuarioId, id, dados) {
   return categoria;
 }
 
-async function remover(usuarioId, id) {
+/**
+ * Excluir uma categoria EM USO desvincula movimentacoes/recorrencias ("Sem categoria") e apaga o orcamento dela.
+ * Por isso, sem forcar=true, devolve 409 com a contagem e deixa quem chamou confirmar com a pessoa.
+ */
+async function remover(usuarioId, id, { forcar = false } = {}) {
+  if (!forcar) {
+    const atual = await categoriaModel.buscarPorId(usuarioId, id);
+    if (!atual) throw new AppError("Categoria não encontrada.", 404);
+    const uso = await categoriaModel.contarUso(usuarioId, id);
+    if (uso.movimentacoes + uso.recorrencias + uso.orcamentos > 0) {
+      const erro = new AppError("Essa categoria está em uso. Confirme para excluir mesmo assim.", 409);
+      erro.detalhes = { emUso: uso };
+      throw erro;
+    }
+  }
   const removida = await categoriaModel.remover(usuarioId, id);
   if (!removida) throw new AppError("Categoria não encontrada.", 404);
 }

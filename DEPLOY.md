@@ -88,3 +88,23 @@ docker compose -f docker-compose.prod.yml exec backend node src/database/migrate
 ```bash
 docker compose -f docker-compose.prod.yml exec postgres pg_dump -U mbd meu_bolso_digital > backup-$(date +%Y%m%d).sql
 ```
+
+
+## Backup automático do banco
+
+Nos composes da VM (`docker-compose.vm.yml`) e do Tunnel (`docker-compose.prod.yml`) há um serviço `backup` que,
+todo dia, gera um dump comprimido do PostgreSQL em **`./backups`** (`mbd-AAAA-MM-DD-HHMMSS.dump`), confere que ele
+abre e apaga os com mais de 14 dias (`BACKUP_KEEP_DAYS` muda isso). O primeiro backup sai 1 minuto depois de subir.
+
+> **O backup fica na mesma máquina do banco.** Copie a pasta `backups/` para fora dela (outro disco, nuvem) com
+> frequência; se a máquina se perder, o backup local se perde junto. `backups/` e `*.dump` estão no `.gitignore`.
+
+- **Ver se está funcionando:** `docker logs meu-bolso-digital-backup-vm` (ou `-prod`) mostra `[backup] OK: ...`.
+- **Gerar um agora:** `docker compose ... run --rm -e BACKUP_ONCE=1 backup`.
+- **Restaurar em um banco de TESTE** (sempre teste a restauração de vez em quando; nunca restaure por cima da produção sem necessidade):
+  ```bash
+  docker compose --env-file .env.production -f docker-compose.vm.yml exec postgres createdb -U mbd meu_bolso_digital_teste
+  docker compose --env-file .env.production -f docker-compose.vm.yml exec -T postgres     pg_restore -U mbd -d meu_bolso_digital_teste --no-owner < backups/mbd-AAAA-MM-DD-HHMMSS.dump
+  ```
+- **Na Railway** (banco gerenciado): ative os backups do plano no painel do PostgreSQL. Para um dump manual,
+  use a URL pública do banco: `pg_dump "$DATABASE_URL" -Fc -f backup.dump`.

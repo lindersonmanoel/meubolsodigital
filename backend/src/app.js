@@ -19,6 +19,7 @@ const backupRoutes = require("./routes/backup.routes");
 const errorHandler = require("./middleware/errorHandler");
 const pool = require("./database/pool");
 const { limiteGeral } = require("./middleware/limiters");
+const { requireAuth } = require("./middleware/auth.middleware");
 const { estadoEmail } = require("./services/email.service");
 
 const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "[::1]"]);
@@ -63,6 +64,11 @@ function createApp() {
   );
   // 1mb pra caber a foto de perfil em base64 (limitada a ~700kb na validacao do controller);
   // as outras rotas continuam com corpos bem menores que isso na pratica.
+  // Restaurar backup: um arquivo com anos de historico passa facilmente de 1 MB (~8.500 movimentacoes). So' esta
+  // rota aceita 20 MB (e ja' exige login + limite de uso pesado); as demais continuam em 1 MB. Precisa vir ANTES do
+  // parser geral: o corpo e' lido uma unica vez, pelo primeiro parser que casar.
+  // Exige login ANTES de ler o corpo: quem nao esta autenticado leva 401 sem o servidor engolir 20 MB.
+  app.use("/api/backup/restaurar", requireAuth, express.json({ limit: "20mb" }));
   app.use(express.json({ limit: "1mb" }));
   if (!config.isTest) {
     app.use(morgan(config.isProduction ? "combined" : "dev"));

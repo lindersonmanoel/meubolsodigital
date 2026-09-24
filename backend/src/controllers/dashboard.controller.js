@@ -4,12 +4,12 @@ const service = require("../services/dashboard.service");
 const movimentacaoService = require("../services/movimentacao.service");
 const metaService = require("../services/meta.service");
 const orcamentoService = require("../services/orcamento.service");
-const { paraCsv } = require("../utils/csv");
+const { paraCsv, decimalBR } = require("../utils/csv");
 const { gerarExcelRelatorioCompleto } = require("../utils/excel");
 
 const COLUNAS_RELATORIO_CSV = [
   { chave: "categoria", rotulo: "Categoria" },
-  { chave: "total", rotulo: "Total de despesas" },
+  { chave: "total", rotulo: "Total de despesas", formato: decimalBR, numerico: true },
 ];
 
 async function resumo(req, res, next) {

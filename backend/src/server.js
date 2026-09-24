@@ -24,7 +24,7 @@ if (config.isProduction) {
 // (e todo redeploy) esperava 10 s e matava o processo no meio das requisicoes. Agora para de aceitar
 // conexoes novas, deixa terminar as em andamento, fecha o pool do banco e sai com codigo 0.
 let encerrando = false;
-function encerrar(sinal) {
+function encerrar(sinal, codigo = 0) {
   if (encerrando) return;
   encerrando = true;
   // eslint-disable-next-line no-console
@@ -32,9 +32,21 @@ function encerrar(sinal) {
   // Passado o prazo, sai mesmo com conexao presa (keep-alive) - nunca fica pendurado.
   setTimeout(() => process.exit(1), 10000).unref();
   server.close(() => {
-    pool.end().catch(() => {}).finally(() => process.exit(0));
+    pool.end().catch(() => {}).finally(() => process.exit(codigo));
   });
   if (typeof server.closeIdleConnections === "function") server.closeIdleConnections();
 }
 process.on("SIGTERM", () => encerrar("SIGTERM"));
 process.on("SIGINT", () => encerrar("SIGINT"));
+
+// Erros que escapariam de todo tratamento: registra com clareza (em vez de morrer calado) e, se a excecao
+// deixou o processo em estado incerto, encerra de forma controlada pra o orquestrador reiniciar.
+process.on("unhandledRejection", (motivo) => {
+  // eslint-disable-next-line no-console
+  console.error("[server] promessa rejeitada sem tratamento:", motivo);
+});
+process.on("uncaughtException", (err) => {
+  // eslint-disable-next-line no-console
+  console.error("[server] exceção não tratada:", err);
+  encerrar("uncaughtException", 1);
+});

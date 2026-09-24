@@ -22,4 +22,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
 
 # Aplica migracoes pendentes a cada deploy (idempotente) e sobe a API. ";" e nao "&&" de
 # proposito: se uma migracao falhar, a API antiga continua de pe (o erro fica no log).
-CMD ["sh", "-c", "node src/database/migrate.js; exec node src/server.js"]
+CMD ["sh", "-c", "node src/database/migrate.js || echo '[migrate] ATENCAO: falha ao aplicar migracoes - a API sobe com o esquema anterior (veja o erro acima)'; exec node src/server.js"]

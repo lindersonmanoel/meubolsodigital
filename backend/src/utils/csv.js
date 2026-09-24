@@ -16,8 +16,21 @@ function escaparCampo(valor) {
  * ([{chave, rotulo}]). Sempre com BOM UTF-8 na frente, pro Excel abrir os acentos certo. */
 function paraCsv(linhas, colunas) {
   const cabecalho = colunas.map((c) => escaparCampo(c.rotulo)).join(";");
-  const corpo = linhas.map((linha) => colunas.map((c) => escaparCampo(linha[c.chave])).join(";")).join("\n");
+  // c.formato (opcional): transforma o valor antes de escrever (ex.: numero com virgula decimal).
+  // c.numerico: o resultado do formato e' um numero puro ("1234,50") e sai SEM aspas (o separador e' ";", entao a
+  // virgula nao precisa de escape) - o Excel em portugues le direto como numero. Texto digitado continua escapado.
+  const celula = (linha, c) => {
+    const valor = c.formato ? c.formato(linha[c.chave]) : linha[c.chave];
+    return c.numerico ? String(valor) : escaparCampo(valor);
+  };
+  const corpo = linhas.map((linha) => colunas.map((c) => celula(linha, c)).join(";")).join("\n");
   return "﻿" + cabecalho + "\n" + corpo + "\n";
 }
 
-module.exports = { paraCsv };
+/** 1234.5 -> "1234,50": o Excel em portugues (separador ";") le "12.50" como texto ou data, e "12,50" como numero. */
+function decimalBR(valor) {
+  const n = Number(valor);
+  return Number.isFinite(n) ? n.toFixed(2).replace(".", ",") : "";
+}
+
+module.exports = { paraCsv, decimalBR };

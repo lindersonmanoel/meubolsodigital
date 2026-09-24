@@ -20,6 +20,10 @@ const ssl = config.databaseSsl
 const pool = new Pool({
   connectionString: config.databaseUrl,
   ssl,
+  max: Number(process.env.DB_POOL_MAX) || 10, // conexoes simultaneas
+  connectionTimeoutMillis: 10000, // desiste de esperar uma conexao livre/o banco apos 10 s
+  idleTimeoutMillis: 30000, // fecha conexoes ociosas
+  statement_timeout: 30000, // uma consulta travada nao prende a conexao pra sempre (a migracao desliga isto)
 });
 
 pool.on("error", (err) => {

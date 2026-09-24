@@ -9,6 +9,8 @@ const path = require("path");
 const pool = require("./pool");
 
 const MIGRATIONS_DIR = path.join(__dirname, "..", "..", "..", "database", "migrations");
+// Numero arbitrario da trava do PostgreSQL (advisory lock); so' precisa ser igual em todas as instancias.
+const MIGRATION_LOCK_ID = 727274;
 
 async function ensureMigrationsTable(client) {
   await client.query(`
@@ -32,6 +34,11 @@ async function run() {
 
   const client = await pool.connect();
   try {
+    // Uma migracao longa (ex.: preencher uma coluna em tabela grande) nao pode ser cortada pelo statement_timeout do pool.
+    await client.query("SET statement_timeout = 0");
+    // Trava de sessao: duas instancias subindo juntas nao aplicam a mesma migracao ao mesmo tempo
+    // (a segunda espera a primeira terminar e ve tudo como "ja aplicado").
+    await client.query("SELECT pg_advisory_lock($1)", [MIGRATION_LOCK_ID]);
     await ensureMigrationsTable(client);
     const { rows } = await client.query("SELECT nome FROM _migrations");
     const applied = new Set(rows.map((r) => r.nome));
@@ -55,6 +62,7 @@ async function run() {
     }
     console.log("[migrate] concluido.");
   } finally {
+    await client.query("SELECT pg_advisory_unlock($1)", [MIGRATION_LOCK_ID]).catch(() => {});
     client.release();
     await pool.end();
   }

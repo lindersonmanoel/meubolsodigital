@@ -16,3 +16,7 @@ logs/
 # Banco local (se algum dia rodar SQLite em dev)
 *.sqlite
 *.sqlite3
+
+# Dumps do PostgreSQL gerados pelo servico de backup (dados reais: NUNCA versionar)
+backups/
+*.dump

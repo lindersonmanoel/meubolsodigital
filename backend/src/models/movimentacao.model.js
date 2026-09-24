@@ -143,11 +143,13 @@ async function porMes(usuarioId, meses = 6) {
                              date_trunc('month', now() AT TIME ZONE 'America/Sao_Paulo'), interval '1 month') AS serie(mes)
        LEFT JOIN (
          SELECT date_trunc('month', data::timestamp) AS mes, SUM(valor) AS total
-           FROM movimentacoes WHERE usuario_id = $1 AND tipo = 'receita' GROUP BY 1
+           FROM movimentacoes WHERE usuario_id = $1 AND tipo = 'receita'
+             AND data >= (date_trunc('month', now() AT TIME ZONE 'America/Sao_Paulo') - ($2::int - 1) * interval '1 month')::date GROUP BY 1
        ) r ON r.mes = serie.mes
        LEFT JOIN (
          SELECT date_trunc('month', data::timestamp) AS mes, SUM(valor) AS total
-           FROM movimentacoes WHERE usuario_id = $1 AND tipo = 'despesa' GROUP BY 1
+           FROM movimentacoes WHERE usuario_id = $1 AND tipo = 'despesa'
+             AND data >= (date_trunc('month', now() AT TIME ZONE 'America/Sao_Paulo') - ($2::int - 1) * interval '1 month')::date GROUP BY 1
        ) d ON d.mes = serie.mes
        ORDER BY serie.mes`,
     [usuarioId, meses]
