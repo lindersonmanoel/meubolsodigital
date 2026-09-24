@@ -57,7 +57,7 @@ function montarShell(paginaAtiva) {
         <header class="app-topbar">
           <button type="button" class="app-menu-btn" id="btn-menu" aria-label="Abrir menu">${ICONES.menu}</button>
           <div class="app-topbar-direita">
-            <span class="hint" id="saudacao">${cache ? cache.email : ""}</span>
+            <span class="hint" id="saudacao"></span>
             <button type="button" class="btn-ajuda-tour" id="btn-ajuda" data-dica="Iniciar tour" aria-label="Iniciar tour guiado pelo site">?</button>
           </div>
         </header>
@@ -66,6 +66,9 @@ function montarShell(paginaAtiva) {
     </div>
   `
   );
+
+  // textContent (nunca dentro do template HTML): o e-mail vem do localStorage/servidor.
+  document.getElementById("saudacao").textContent = cache ? cache.email : "";
 
   const template = document.getElementById("conteudo-pagina");
   const alvo = document.getElementById("app-conteudo");

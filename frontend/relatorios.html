@@ -2,11 +2,10 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Relatórios | Meu Bolso Digital</title>
 <link rel="icon" href="assets/images/logo-icon.png">
 <link rel="manifest" href="manifest.json">
-<link rel="preconnect" href="https://backend-production-827d.up.railway.app">
 <meta name="theme-color" content="#0d3b66">
 <link rel="apple-touch-icon" href="assets/images/logo-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -130,7 +129,7 @@
         corpoTabela.innerHTML = "";
         r.despesasPorCategoria.forEach((c) => {
           const tr = document.createElement("tr");
-          tr.innerHTML = `<td>${escaparHtml(c.categoria)}</td><td class="valor-despesa">${formatarMoeda(c.total)}</td>`;
+          tr.innerHTML = `<td data-label="Categoria">${escaparHtml(c.categoria)}</td><td class="valor-despesa" data-label="Total de despesas">${formatarMoeda(c.total)}</td>`;
           corpoTabela.appendChild(tr);
         });
         listaVazia.hidden = r.despesasPorCategoria.length > 0;

@@ -2,11 +2,10 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Categorias | Meu Bolso Digital</title>
 <link rel="icon" href="assets/images/logo-icon.png">
 <link rel="manifest" href="manifest.json">
-<link rel="preconnect" href="https://backend-production-827d.up.railway.app">
 <meta name="theme-color" content="#0d3b66">
 <link rel="apple-touch-icon" href="assets/images/logo-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -111,8 +110,8 @@
     function linhaCategoria(categoria) {
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${escaparHtml(categoria.nome)}</td>
-        <td><span class="badge badge-${categoria.tipo}">${categoria.tipo === "receita" ? "Receita" : "Despesa"}</span></td>
+        <td data-label="Nome">${escaparHtml(categoria.nome)}</td>
+        <td data-label="Tipo"><span class="badge badge-${categoria.tipo}">${categoria.tipo === "receita" ? "Receita" : "Despesa"}</span></td>
         <td class="tabela-acoes">
           <button type="button" data-acao="editar">Editar</button>
           <button type="button" class="excluir" data-acao="excluir">Excluir</button>
@@ -129,12 +128,25 @@
       return div.innerHTML;
     }
 
-    async function excluir(categoria) {
-      if (!confirm(`Excluir a categoria "${categoria.nome}"? Movimentações e recorrências que a usam ficam sem categoria, e o orçamento dessa categoria (se houver) é removido junto.`)) return;
+    async function excluir(categoria, forcar = false) {
+      if (!forcar && !confirm(`Excluir a categoria "${categoria.nome}"? Movimentações e recorrências que a usam ficam sem categoria, e o orçamento dessa categoria (se houver) é removido junto.`)) return;
       try {
-        await Api.removerCategoria(categoria.id);
+        await Api.removerCategoria(categoria.id, forcar);
         await carregarLista();
       } catch (err) {
+        // 409 com "emUso": a categoria tem itens ligados - mostra quantos e so' exclui se a pessoa confirmar.
+        const uso = err.status === 409 && err.body && err.body.detalhes && err.body.detalhes.emUso;
+        if (uso) {
+          const partes = [];
+          if (uso.movimentacoes) partes.push(`${uso.movimentacoes} movimentação(ões)`);
+          if (uso.recorrencias) partes.push(`${uso.recorrencias} recorrência(s)`);
+          if (uso.orcamentos) partes.push(`${uso.orcamentos} orçamento(s)`);
+          const aviso = `A categoria "${categoria.nome}" está em uso: ${partes.join(", ")}.\n\n`
+            + 'Se excluir, as movimentações e recorrências ficam "Sem categoria" e o orçamento dessa categoria é apagado.\n\n'
+            + "Excluir mesmo assim?";
+          if (confirm(aviso)) await excluir(categoria, true);
+          return;
+        }
         mostrarErro(erroGeral, err.message);
       }
     }

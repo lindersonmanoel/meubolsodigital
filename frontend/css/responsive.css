@@ -49,3 +49,91 @@
   .grade-cartoes { grid-template-columns: 1fr; }
   .cartao-metrica .valor { font-size: 1.3rem; }
 }
+
+/* =====================================================================================
+   MOBILE (auditoria): tabelas em cartoes, alvos de toque, area segura do iPhone.
+   ===================================================================================== */
+
+/* Tabelas viram cartoes no celular. Antes: "min-width: 560px" + rolagem lateral, e as colunas Valor e
+   Acoes (Editar/Excluir) ficavam escondidas fora da tela. Os <td> trazem data-label com o nome da coluna. */
+@media (max-width: 600px) {
+  .tabela-caixa { overflow: visible; background: transparent; border: none; border-radius: 0; }
+  table.tabela { min-width: 0; }
+  table.tabela, table.tabela tbody, table.tabela tr, table.tabela td { display: block; width: 100%; }
+  table.tabela thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  table.tabela tbody tr {
+    background: var(--card-bg);
+    border: 1px solid var(--borda);
+    border-radius: 12px;
+    padding: 6px 14px;
+    margin-bottom: 10px;
+  }
+  table.tabela tbody tr:hover { background: var(--card-bg); }
+  table.tabela td {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 14px;
+    padding: 7px 0;
+    border: none;
+    text-align: right;
+    font-size: 0.92rem;
+    overflow-wrap: anywhere;
+  }
+  table.tabela td[hidden] { display: none; }
+  table.tabela td::before {
+    content: attr(data-label);
+    flex: 0 0 auto;
+    color: var(--dim);
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    text-align: left;
+  }
+  table.tabela td:not([data-label])::before { content: none; }
+  table.tabela td.tabela-acoes {
+    justify-content: flex-end;
+    gap: 10px;
+    border-top: 1px solid var(--borda);
+    margin-top: 6px;
+    padding: 10px 0 4px;
+  }
+  /* filtros: um campo por linha (o select de categoria ficava cortado: "Todas as catego") */
+  .filtros .campo { flex: 1 1 100%; }
+}
+
+/* Alvos de toque: minimo de 44 px (recomendacao Apple/Google). Antes: Editar/Excluir com 23 px de altura,
+   menu com 30 px e checkbox de 13 px. */
+@media (pointer: coarse), (max-width: 600px) {
+  .btn, .app-conteudo button { min-height: 44px; }
+  .app-conteudo button:not(.btn) { padding: 10px 14px; }
+  .app-menu-btn, .btn-ajuda-tour { min-width: 44px; min-height: 44px; }
+  .campo-com-icone .alternar-senha { min-width: 44px; min-height: 44px; }
+  .opcao-lembrar { min-height: 44px; }
+  .opcao-lembrar input[type="checkbox"] { width: 22px; height: 22px; }
+  .link-esqueci { display: inline-block; padding: 12px 0; }
+  summary { min-height: 44px; display: flex; align-items: center; }
+}
+
+/* Area segura (entalhe/barra de status do iPhone): o app usa status-bar-style=black-translucent e
+   viewport-fit=cover, entao o topo e o rodape precisam respeitar env(safe-area-inset-*). */
+@media (max-width: 860px) {
+  .app-topbar { padding-top: calc(10px + env(safe-area-inset-top)); }
+  .app-sidebar {
+    padding-top: calc(18px + env(safe-area-inset-top));
+    padding-bottom: calc(18px + env(safe-area-inset-bottom));
+    /* celular deitado / tela curta: o menu rola em vez de cortar o botao "Sair" */
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .app-conteudo { padding-bottom: calc(18px + env(safe-area-inset-bottom)); }
+}
+@media (max-width: 600px) {
+  .faixa-instalar { bottom: calc(12px + env(safe-area-inset-bottom)); }
+}
+
+/* Login/cadastro no celular: a bola decorativa do canto cobria o slogan ("no seu controle"). */
+@media (max-width: 600px) {
+  .forma-topo-direita { width: 18vw; height: 18vw; top: -9vw; right: -7vw; }
+}

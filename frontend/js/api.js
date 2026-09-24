@@ -26,7 +26,9 @@ const Api = (function () {
 
   const TIMEOUT_MS = 15000;
 
-  async function request(path, { method = "GET", body, autenticado = false } = {}) {
+  // manter401: o 401 desta rota e' erro de negocio (ex.: "senha atual incorreta"), nao sessao expirada -
+  // nesse caso mostra o erro na tela em vez de encerrar a sessao e mandar pro login.
+  async function request(path, { method = "GET", body, autenticado = false, manter401 = false } = {}) {
     const headers = { "Content-Type": "application/json" };
     if (autenticado) {
       const token = tokenAtual();
@@ -67,7 +69,7 @@ const Api = (function () {
     if (!res.ok) {
       // Token expirado/invalido numa rota autenticada: encerra a sessao local e manda
       // pro login, em vez de deixar a pagina mostrando um erro cru sem saida.
-      if (res.status === 401 && autenticado && typeof Sessao !== "undefined") {
+      if (res.status === 401 && autenticado && !manter401 && typeof Sessao !== "undefined") {
         Sessao.encerrar();
         if (!location.pathname.endsWith("login.html")) {
           window.location.href = "login.html";
@@ -87,13 +89,13 @@ const Api = (function () {
     redefinirSenha: (payload) => request("/auth/redefinir-senha", { method: "POST", body: payload }),
     me: () => request("/auth/me", { autenticado: true }),
     atualizarPerfil: (payload) => request("/users/me", { method: "PUT", body: payload, autenticado: true }),
-    trocarSenha: (payload) => request("/users/senha", { method: "PUT", body: payload, autenticado: true }),
+    trocarSenha: (payload) => request("/users/senha", { method: "PUT", body: payload, autenticado: true, manter401: true }),
 
     // Categorias
     listarCategorias: () => request("/categorias", { autenticado: true }),
     criarCategoria: (payload) => request("/categorias", { method: "POST", body: payload, autenticado: true }),
     atualizarCategoria: (id, payload) => request(`/categorias/${id}`, { method: "PUT", body: payload, autenticado: true }),
-    removerCategoria: (id) => request(`/categorias/${id}`, { method: "DELETE", autenticado: true }),
+    removerCategoria: (id, forcar) => request(`/categorias/${id}${forcar ? "?forcar=1" : ""}`, { method: "DELETE", autenticado: true }),
 
     // Movimentações (genérico, receitas e despesas usam a mesma forma com base diferente)
     listarMovimentacoes: (base, filtros) => request(`/${base}${montarQuery(filtros)}`, { autenticado: true }),

@@ -2,11 +2,10 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Configurações | Meu Bolso Digital</title>
 <link rel="icon" href="assets/images/logo-icon.png">
 <link rel="manifest" href="manifest.json">
-<link rel="preconnect" href="https://backend-production-827d.up.railway.app">
 <meta name="theme-color" content="#0d3b66">
 <link rel="apple-touch-icon" href="assets/images/logo-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -105,12 +104,12 @@
         </div>
         <div class="campo">
           <label for="novaSenha">Nova senha</label>
-          <input type="password" id="novaSenha" autocomplete="new-password" minlength="8" required>
+          <input type="password" id="novaSenha" autocomplete="new-password" minlength="8" maxlength="72" required>
           <p class="erro-campo" data-campo="novaSenha" hidden></p>
         </div>
         <div class="campo">
           <label for="confirmarNovaSenha">Confirmar nova senha</label>
-          <input type="password" id="confirmarNovaSenha" autocomplete="new-password" minlength="8" required>
+          <input type="password" id="confirmarNovaSenha" autocomplete="new-password" minlength="8" maxlength="72" required>
           <p class="erro-campo" data-campo="confirmarNovaSenha" hidden></p>
         </div>
         <button type="submit" class="btn btn-primario" id="btn-trocar-senha" style="width:auto;padding:10px 20px">Trocar senha</button>
@@ -391,11 +390,13 @@
       const btn = document.getElementById("btn-trocar-senha");
       btn.disabled = true;
       try {
-        await Api.trocarSenha({
+        const resposta = await Api.trocarSenha({
           senhaAtual: document.getElementById("senhaAtual").value,
           novaSenha: document.getElementById("novaSenha").value,
           confirmarNovaSenha: document.getElementById("confirmarNovaSenha").value,
         });
+        // A troca de senha invalida os tokens antigos: guarda o novo pra continuar logado neste aparelho.
+        if (resposta && resposta.token) Sessao.salvar(resposta.token, Sessao.usuario());
         formSenha.reset();
         mostrarErro(sucessoSenha, "Senha alterada com sucesso.");
       } catch (err) {
