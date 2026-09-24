@@ -3,7 +3,7 @@
 const pool = require("../database/pool");
 
 const CAMPOS = `r.id, r.tipo, r.descricao, r.valor, r.dia_mes, r.ativa, r.categoria_id,
-                c.nome AS categoria_nome, r.criado_em, r.atualizado_em`;
+                c.nome AS categoria_nome, r.ultimo_mes_gerado, r.criado_em, r.atualizado_em`;
 const SELECT_BASE = `SELECT ${CAMPOS} FROM recorrencias r LEFT JOIN categorias c ON c.id = r.categoria_id`;
 
 async function listar(usuarioId) {
@@ -33,7 +33,12 @@ async function criar(usuarioId, { tipo, descricao, valor, diaMes, categoriaId, a
 async function atualizar(usuarioId, id, { tipo, descricao, valor, diaMes, categoriaId, ativa }) {
   const { rows } = await pool.query(
     `UPDATE recorrencias
-        SET categoria_id = $1, tipo = $2, descricao = $3, valor = $4, dia_mes = $5, ativa = $6, atualizado_em = now()
+        SET categoria_id = $1, tipo = $2, descricao = $3, valor = $4, dia_mes = $5, ativa = $6, atualizado_em = now(),
+            -- Reativando uma recorrencia pausada: nao "recupera" os meses em que ficou parada; volta a gerar
+            -- a partir do mes atual (marca o mes anterior como ja' processado).
+            ultimo_mes_gerado = CASE WHEN ativa = false AND $6::boolean = true
+              THEN (date_trunc('month', now() AT TIME ZONE 'America/Sao_Paulo') - interval '1 month')::date
+              ELSE ultimo_mes_gerado END
       WHERE usuario_id = $7 AND id = $8
       RETURNING id`,
     [categoriaId || null, tipo, descricao, valor, diaMes, ativa !== false, usuarioId, id]
@@ -47,4 +52,12 @@ async function remover(usuarioId, id) {
   return rowCount > 0;
 }
 
-module.exports = { listar, listarAtivas, buscarPorId, criar, atualizar, remover };
+/** Avanca (nunca recua) o ultimo mes processado da recorrencia. dataISO = "AAAA-MM-01". */
+async function marcarUltimoMes(id, dataISO) {
+  await pool.query(
+    "UPDATE recorrencias SET ultimo_mes_gerado = GREATEST(COALESCE(ultimo_mes_gerado, DATE '0001-01-01'), $2::date) WHERE id = $1",
+    [id, dataISO]
+  );
+}
+
+module.exports = { listar, listarAtivas, buscarPorId, criar, atualizar, remover, marcarUltimoMes };

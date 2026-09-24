@@ -4,6 +4,7 @@ const request = require("supertest");
 const createApp = require("../src/app");
 const pool = require("../src/database/pool");
 const { criarUsuarioAutenticado } = require("./helpers");
+const { partesNoFuso } = require("../src/utils/fuso");
 
 const app = createApp();
 
@@ -60,9 +61,8 @@ describe("recorrencias", () => {
 
   test("gera a movimentação do mês automaticamente quando o dashboard é aberto (dia já chegou)", async () => {
     const { headers } = await criarUsuarioAutenticado(app);
-    const hoje = new Date();
-    // dia_mes no passado/hoje dentro do mes, pra garantir que ja "chegou a vez" dela
-    const diaMes = Math.max(1, Math.min(28, hoje.getDate()));
+    // dia_mes no passado/hoje dentro do mes (dia de HOJE no fuso do app), pra garantir que ja "chegou a vez" dela
+    const diaMes = Math.max(1, Math.min(28, partesNoFuso().dia));
     await request(app).post("/api/recorrencias").set(headers).send({ tipo: "receita", descricao: "Salário", valor: 3000, diaMes });
 
     const resumo = await request(app).get("/api/dashboard/resumo").set(headers);
@@ -81,8 +81,7 @@ describe("recorrencias", () => {
 
   test("recorrência inativa não gera movimentação", async () => {
     const { headers } = await criarUsuarioAutenticado(app);
-    const hoje = new Date();
-    const diaMes = Math.max(1, Math.min(28, hoje.getDate()));
+    const diaMes = Math.max(1, Math.min(28, partesNoFuso().dia));
     await request(app).post("/api/recorrencias").set(headers).send({ tipo: "receita", descricao: "Pausada", valor: 100, diaMes, ativa: false });
 
     await request(app).get("/api/dashboard/resumo").set(headers);

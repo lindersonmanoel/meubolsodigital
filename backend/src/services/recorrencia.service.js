@@ -5,6 +5,7 @@ const movimentacaoModel = require("../models/movimentacao.model");
 const categoriaModel = require("../models/categoria.model");
 const { AppError } = require("../utils/errors");
 const { partesNoFuso } = require("../utils/fuso");
+const { paraDataISO } = require("../utils/datas");
 
 const TIPOS_VALIDOS = ["receita", "despesa"];
 
@@ -65,11 +66,23 @@ async function remover(usuarioId, id) {
   if (!removida) throw new AppError("Recorrência não encontrada.", 404);
 }
 
+// Ate' quantos meses pra tras uma recorrencia e' preenchida de uma vez (evita despejar anos de lancamentos).
+const MAX_MESES_RETROATIVOS = 12;
+
+const indiceDoMes = (ano, mes) => ano * 12 + (mes - 1); // mes 1-12
+const anoMesDoIndice = (indice) => ({ ano: Math.floor(indice / 12), mes: (indice % 12) + 1 });
+const doisDigitos = (n) => String(n).padStart(2, "0");
+
 /**
- * Gera a movimentacao do mes atual pra cada recorrencia ativa que ainda nao tem uma (secao
- * de melhorias: receitas/despesas fixas). Chamado sempre que a pessoa abre o dashboard ou a
- * lista de movimentacoes - nao precisa de agendador/cron separado, so' "preenche a lacuna" na
- * primeira vez que alguem olha o app depois da virada do mes.
+ * Gera as movimentacoes das recorrencias ativas. Chamado sempre que a pessoa abre o dashboard - nao
+ * precisa de agendador/cron: "preenche a lacuna" quando alguem olha o app.
+ *
+ * Cada recorrencia guarda ultimo_mes_gerado (ate' que mes ja' foi processada). A geracao cobre os meses
+ * DEPOIS dele ate' o atual (max. 12), entao:
+ *  - meses em que a pessoa nao abriu o app sao preenchidos;
+ *  - um lancamento apagado de proposito NAO volta (o mes ja' consta como processado);
+ *  - recorrencia sem historico parte do mes em que foi criada.
+ * No mes atual, so' gera se o dia da recorrencia ja' chegou. Duplicidade e' barrada pelo indice unico.
  */
 async function gerarDoMesAtual(usuarioId, agora = new Date()) {
   const ativas = await recorrenciaModel.listarAtivas(usuarioId);
@@ -77,24 +90,46 @@ async function gerarDoMesAtual(usuarioId, agora = new Date()) {
 
   // Mes/dia no fuso do app (America/Sao_Paulo), nao no do servidor (UTC).
   const { ano, mes, dia: diaHoje } = partesNoFuso(agora);
-  const anoMes = `${ano}-${String(mes).padStart(2, "0")}`;
+  const atual = indiceDoMes(ano, mes);
 
   const geradas = [];
   for (const recorrencia of ativas) {
-    if (recorrencia.dia_mes > diaHoje) continue; // ainda nao chegou o dia neste mes
-    const jaExiste = await movimentacaoModel.existeGeradaNoMes(usuarioId, recorrencia.id, anoMes);
-    if (jaExiste) continue;
-    const data = `${anoMes}-${String(recorrencia.dia_mes).padStart(2, "0")}`;
-    const movimentacao = await movimentacaoModel.criarDeRecorrencia(usuarioId, {
-      recorrenciaId: recorrencia.id,
-      categoriaId: recorrencia.categoria_id,
-      tipo: recorrencia.tipo,
-      descricao: recorrencia.descricao,
-      valor: recorrencia.valor,
-      data,
-    });
-    // null = outra requisicao gerou a mesma recorrencia/mes ao mesmo tempo (indice unico): nada a fazer.
-    if (movimentacao) geradas.push(movimentacao);
+    let inicio;
+    if (recorrencia.ultimo_mes_gerado) {
+      const [a, m] = paraDataISO(recorrencia.ultimo_mes_gerado).split("-").map(Number);
+      inicio = indiceDoMes(a, m) + 1;
+    } else {
+      const criada = partesNoFuso(new Date(recorrencia.criado_em));
+      inicio = indiceDoMes(criada.ano, criada.mes);
+    }
+
+    let processouAlgum = false;
+    for (let indice = Math.max(inicio, atual - (MAX_MESES_RETROATIVOS - 1)); indice <= atual; indice += 1) {
+      if (indice === atual && recorrencia.dia_mes > diaHoje) break; // ainda nao chegou o dia neste mes
+      const { ano: a, mes: m } = anoMesDoIndice(indice);
+      const anoMes = `${a}-${doisDigitos(m)}`;
+      processouAlgum = true;
+
+      const jaExiste = await movimentacaoModel.existeGeradaNoMes(usuarioId, recorrencia.id, anoMes);
+      if (jaExiste) continue;
+      const movimentacao = await movimentacaoModel.criarDeRecorrencia(usuarioId, {
+        recorrenciaId: recorrencia.id,
+        categoriaId: recorrencia.categoria_id,
+        tipo: recorrencia.tipo,
+        descricao: recorrencia.descricao,
+        valor: recorrencia.valor,
+        data: `${anoMes}-${doisDigitos(recorrencia.dia_mes)}`,
+      });
+      // null = outra requisicao gerou a mesma recorrencia/mes ao mesmo tempo (indice unico): nada a fazer.
+      if (movimentacao) geradas.push(movimentacao);
+    }
+
+    if (processouAlgum) {
+      // Marca ate' o ultimo mes efetivamente processado (o atual, se o dia ja' chegou; senao o anterior).
+      const ultimo = recorrencia.dia_mes > diaHoje ? atual - 1 : atual;
+      const { ano: a, mes: m } = anoMesDoIndice(ultimo);
+      await recorrenciaModel.marcarUltimoMes(recorrencia.id, `${a}-${doisDigitos(m)}-01`);
+    }
   }
   return geradas;
 }

@@ -169,18 +169,21 @@ describe("fuso horario unico: America/Sao_Paulo (BUG-07)", () => {
     expect(partesNoFuso(new Date("2027-01-01T03:00:00Z"))).toEqual({ ano: 2027, mes: 1, dia: 1 });
   });
 
-  async function novaRecorrenciaDia1() {
+  // Fixa criado_em/ultimo_mes_gerado pra o teste nao depender da data real de hoje.
+  async function novaRecorrenciaDia1(criadoEm, ultimoMes = null) {
     const { headers, usuarioId } = await criarUsuarioAutenticado(app);
     const res = await request(app).post("/api/recorrencias").set(headers)
       .send({ tipo: "despesa", descricao: "Aluguel", valor: 1000, diaMes: 1 });
     expect(res.status).toBe(201);
+    await pool.query("UPDATE recorrencias SET criado_em = $1, ultimo_mes_gerado = $2 WHERE id = $3",
+      [criadoEm, ultimoMes, res.body.recorrencia.id]);
     return usuarioId;
   }
   const geradas = async (usuarioId) =>
     (await pool.query("SELECT to_char(data, 'YYYY-MM-DD') AS data FROM movimentacoes WHERE usuario_id = $1 ORDER BY data", [usuarioId])).rows.map((r) => r.data);
 
   test("as 23h30 do ultimo dia do mes (Brasilia) NAO lanca a recorrencia do dia 1 do mes seguinte", async () => {
-    const usuarioId = await novaRecorrenciaDia1();
+    const usuarioId = await novaRecorrenciaDia1("2026-09-15T12:00:00Z");
     // 02h30 UTC de 01/10 = 23h30 de 30/09 em Brasilia: ainda e' setembro, entao o lancamento
     // e' o de 01/09 (o codigo antigo, em UTC, achava que ja era outubro e gerava 01/10 cedo demais).
     await recorrenciaService.gerarDoMesAtual(usuarioId, new Date("2026-10-01T02:30:00Z"));
@@ -188,7 +191,7 @@ describe("fuso horario unico: America/Sao_Paulo (BUG-07)", () => {
   });
 
   test("depois da meia-noite em Brasilia o lancamento e' de outubro", async () => {
-    const usuarioId = await novaRecorrenciaDia1();
+    const usuarioId = await novaRecorrenciaDia1("2026-09-15T12:00:00Z", "2026-09-01"); // setembro ja processado
     await recorrenciaService.gerarDoMesAtual(usuarioId, new Date("2026-10-01T03:30:00Z"));
     expect(await geradas(usuarioId)).toEqual(["2026-10-01"]);
   });
@@ -203,7 +206,8 @@ describe("recorrencia gera uma unica movimentacao por mes, mesmo com chamadas si
 
   test("15 geracoes simultaneas produzem exatamente 1 lancamento", async () => {
     const { headers, usuarioId } = await criarUsuarioAutenticado(app);
-    await request(app).post("/api/recorrencias").set(headers).send({ tipo: "despesa", descricao: "Internet", valor: 100, diaMes: 1 });
+    const rec = await request(app).post("/api/recorrencias").set(headers).send({ tipo: "despesa", descricao: "Internet", valor: 100, diaMes: 1 });
+    await pool.query("UPDATE recorrencias SET criado_em = '2026-08-01T12:00:00Z' WHERE id = $1", [rec.body.recorrencia.id]);
     const agora = new Date("2026-08-20T15:00:00Z");
     await Promise.all(Array.from({ length: 15 }, () => recorrenciaService.gerarDoMesAtual(usuarioId, agora)));
     const { rows } = await pool.query("SELECT count(*)::int AS total FROM movimentacoes WHERE usuario_id = $1", [usuarioId]);
