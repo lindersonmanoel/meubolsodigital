@@ -3,6 +3,7 @@
 const orcamentoModel = require("../models/orcamento.model");
 const categoriaModel = require("../models/categoria.model");
 const { AppError } = require("../utils/errors");
+const { VALOR_MAXIMO } = require("../utils/validators");
 
 /** Acrescenta o percentual gasto e um alerta quando passa (ou quase passa) do limite. */
 function comAlerta(orcamento) {
@@ -26,6 +27,7 @@ async function validar(usuarioId, dados, { categoriaFixa } = {}) {
 
   const valorLimite = Number(dados.valorLimite);
   if (!Number.isFinite(valorLimite) || valorLimite <= 0) erros.valorLimite = "Informe um limite maior que zero.";
+  else if (valorLimite > VALOR_MAXIMO) erros.valorLimite = "Valor grande demais.";
 
   if (!erros.categoriaId && categoriaId) {
     const categoria = await categoriaModel.buscarPorId(usuarioId, categoriaId);

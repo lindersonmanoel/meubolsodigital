@@ -2,7 +2,9 @@
 
 const authService = require("../services/auth.service");
 const userModel = require("../models/user.model");
-const { validateRegister, validateLogin, validateEsqueciSenha, normalizeEmail } = require("../utils/validators");
+const {
+  validateRegister, validateLogin, validateEsqueciSenha, validateNomeEmail, normalizeEmail,
+} = require("../utils/validators");
 
 async function register(req, res, next) {
   try {
@@ -84,9 +86,7 @@ async function updateMe(req, res, next) {
   try {
     const nome = String((req.body || {}).nome || "").trim();
     const email = normalizeEmail((req.body || {}).email);
-    const erros = {};
-    if (nome.length < 2) erros.nome = "Informe seu nome completo.";
-    if (!email) erros.email = "O e-mail é obrigatório.";
+    const erros = validateNomeEmail(nome, email);
 
     const atual = await userModel.findById(req.usuarioId);
     if (!atual) return res.status(404).json({ erro: "Usuário não encontrado." });

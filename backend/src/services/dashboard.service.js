@@ -2,8 +2,7 @@
 
 const movimentacaoModel = require("../models/movimentacao.model");
 const recorrenciaService = require("./recorrencia.service");
-
-const DATA_RE = /^\d{4}-\d{2}-\d{2}$/;
+const { dataValida } = require("../utils/datas");
 
 function periodoDoMesAtual() {
   const agora = new Date();
@@ -43,8 +42,8 @@ async function graficos(usuarioId, { meses = 6 } = {}) {
 
 function normalizarPeriodo(query) {
   const filtro = {};
-  if (query.inicio && DATA_RE.test(query.inicio)) filtro.inicio = query.inicio;
-  if (query.fim && DATA_RE.test(query.fim)) filtro.fim = query.fim;
+  if (dataValida(query.inicio)) filtro.inicio = query.inicio;
+  if (dataValida(query.fim)) filtro.fim = query.fim;
   return filtro;
 }
 

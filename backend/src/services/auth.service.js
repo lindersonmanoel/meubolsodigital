@@ -11,7 +11,8 @@ const passwordResetModel = require("../models/passwordReset.model");
 const emailService = require("./email.service");
 const { AppError } = require("../utils/errors");
 
-const SALT_ROUNDS = 12;
+// Em teste o custo minimo do bcrypt (4) deixa a suite bem mais rapida; producao segue com 12.
+const SALT_ROUNDS = config.isTest ? 4 : 12;
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hora
 
 function hashToken(token) {

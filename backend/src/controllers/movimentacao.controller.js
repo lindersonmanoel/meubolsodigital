@@ -54,7 +54,7 @@ function build(tipoFixo) {
     },
     async remover(req, res, next) {
       try {
-        await service.remover(req.usuarioId, req.params.id);
+        await service.remover(req.usuarioId, req.params.id, { tipoFixo });
         res.status(204).end();
       } catch (err) {
         next(err);

@@ -61,20 +61,24 @@ async function criar(usuarioId, dados) {
   return buscarPorId(usuarioId, rows[0].id);
 }
 
-async function atualizar(usuarioId, id, dados) {
+/** tipoFixo (opcional): nas rotas /receitas e /despesas so' mexe em registros desse tipo. */
+async function atualizar(usuarioId, id, dados, tipoFixo = null) {
   const { rows } = await pool.query(
     `UPDATE movimentacoes
         SET categoria_id = $1, tipo = $2, descricao = $3, valor = $4, data = $5, observacao = $6, atualizado_em = now()
-      WHERE usuario_id = $7 AND id = $8
+      WHERE usuario_id = $7 AND id = $8 AND ($9::text IS NULL OR tipo = $9)
       RETURNING id`,
-    [dados.categoriaId || null, dados.tipo, dados.descricao, dados.valor, dados.data, dados.observacao || null, usuarioId, id]
+    [dados.categoriaId || null, dados.tipo, dados.descricao, dados.valor, dados.data, dados.observacao || null, usuarioId, id, tipoFixo]
   );
   if (!rows[0]) return null;
   return buscarPorId(usuarioId, rows[0].id);
 }
 
-async function remover(usuarioId, id) {
-  const { rowCount } = await pool.query("DELETE FROM movimentacoes WHERE usuario_id = $1 AND id = $2", [usuarioId, id]);
+async function remover(usuarioId, id, tipoFixo = null) {
+  const { rowCount } = await pool.query(
+    "DELETE FROM movimentacoes WHERE usuario_id = $1 AND id = $2 AND ($3::text IS NULL OR tipo = $3)",
+    [usuarioId, id, tipoFixo]
+  );
   return rowCount > 0;
 }
 

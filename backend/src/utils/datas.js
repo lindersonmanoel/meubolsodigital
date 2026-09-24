@@ -27,4 +27,13 @@ function paraDataBR(valor) {
   return `${dia}/${mes}/${ano}`;
 }
 
-module.exports = { paraDataISO, paraDataBR };
+/** "AAAA-MM-DD" que existe de verdade no calendario (rejeita 2026-02-31, 2026-13-01, 2026-02-29...).
+ * Date.parse aceita dias que nao existem (vira o mes seguinte), e o PostgreSQL recusa - dai o erro 500. */
+function dataValida(valor) {
+  if (typeof valor !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(valor)) return false;
+  const [ano, mes, dia] = valor.split("-").map(Number);
+  const data = new Date(Date.UTC(ano, mes - 1, dia));
+  return data.getUTCFullYear() === ano && data.getUTCMonth() === mes - 1 && data.getUTCDate() === dia;
+}
+
+module.exports = { paraDataISO, paraDataBR, dataValida };

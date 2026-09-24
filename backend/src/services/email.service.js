@@ -19,13 +19,22 @@ async function enviarRecuperacaoSenha({ para, nome, link }) {
   if (!resend) {
     // Sem RESEND_API_KEY configurada (dev/teste, ou producao ainda nao configurada) - nao
     // quebra o fluxo, so' nao manda o e-mail de verdade. Fica no log pra testar manualmente.
-    // eslint-disable-next-line no-console
-    console.warn("[email] RESEND_API_KEY não configurada - link de recuperação ficou só no log:", link);
+    // O link contem o token de redefinicao: so' vai pro log fora de producao.
+    if (config.isProduction) {
+      // eslint-disable-next-line no-console
+      console.warn("[email] RESEND_API_KEY não configurada - e-mail de recuperação NÃO enviado.");
+    } else {
+      // eslint-disable-next-line no-console
+      console.warn("[email] RESEND_API_KEY não configurada - link de recuperação ficou só no log:", link);
+    }
     return;
   }
 
   const nomeSeguro = nome ? escaparHtml(nome) : "";
-  await resend.emails.send({
+  // O SDK do Resend devolve { error } em vez de lancar excecao: sem ler o retorno, uma falha
+  // (dominio nao verificado, chave invalida...) passaria em silencio. Nao relanca de proposito -
+  // a rota responde sempre igual, exista ou nao a conta (evita enumeracao de e-mails).
+  const { error } = await resend.emails.send({
     from: config.emailFrom,
     to: para,
     subject: "Recupere sua senha - Meu Bolso Digital",
@@ -36,6 +45,10 @@ async function enviarRecuperacaoSenha({ para, nome, link }) {
       <p>Se você não pediu isso, pode ignorar este e-mail com segurança - sua senha continua a mesma.</p>
     `,
   });
+  if (error) {
+    // eslint-disable-next-line no-console
+    console.error("[email] falha ao enviar recuperação de senha:", error.name || "", error.message || error);
+  }
 }
 
 module.exports = { enviarRecuperacaoSenha };

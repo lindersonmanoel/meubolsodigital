@@ -3,12 +3,12 @@
 const movimentacaoModel = require("../models/movimentacao.model");
 const categoriaModel = require("../models/categoria.model");
 const { AppError } = require("../utils/errors");
+const { dataValida } = require("../utils/datas");
 
 const TIPOS_VALIDOS = ["receita", "despesa"];
-const DATA_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 function validarData(valor, campo, erros) {
-  if (!valor || !DATA_RE.test(valor) || Number.isNaN(Date.parse(valor))) {
+  if (!dataValida(valor)) {
     erros[campo] = "Informe uma data válida (AAAA-MM-DD).";
     return null;
   }
@@ -56,8 +56,8 @@ function normalizarFiltros(query, { tipoFixo } = {}) {
     const id = Number(query.categoriaId);
     if (Number.isInteger(id) && id > 0) filtros.categoriaId = id;
   }
-  if (query.inicio && DATA_RE.test(query.inicio)) filtros.inicio = query.inicio;
-  if (query.fim && DATA_RE.test(query.fim)) filtros.fim = query.fim;
+  if (dataValida(query.inicio)) filtros.inicio = query.inicio;
+  if (dataValida(query.fim)) filtros.fim = query.fim;
   if (query.busca) filtros.busca = String(query.busca).trim().slice(0, 160);
   if (query.valorMin != null && query.valorMin !== "") {
     const v = Number(query.valorMin);
@@ -111,13 +111,13 @@ async function criar(usuarioId, dados, opts) {
 
 async function atualizar(usuarioId, id, dados, opts) {
   const validado = await validar(usuarioId, dados, opts);
-  const atualizada = await movimentacaoModel.atualizar(usuarioId, id, validado);
+  const atualizada = await movimentacaoModel.atualizar(usuarioId, id, validado, opts && opts.tipoFixo);
   if (!atualizada) throw new AppError("Movimentação não encontrada.", 404);
   return atualizada;
 }
 
-async function remover(usuarioId, id) {
-  const removida = await movimentacaoModel.remover(usuarioId, id);
+async function remover(usuarioId, id, opts) {
+  const removida = await movimentacaoModel.remover(usuarioId, id, opts && opts.tipoFixo);
   if (!removida) throw new AppError("Movimentação não encontrada.", 404);
 }
 

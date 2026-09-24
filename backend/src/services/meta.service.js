@@ -2,8 +2,8 @@
 
 const metaModel = require("../models/meta.model");
 const { AppError } = require("../utils/errors");
-
-const DATA_RE = /^\d{4}-\d{2}-\d{2}$/;
+const { dataValida } = require("../utils/datas");
+const { VALOR_MAXIMO } = require("../utils/validators");
 
 /** progresso = valor_atual / valor_objetivo * 100, nunca passando de 100 (secao 27). */
 function comProgresso(meta) {
@@ -21,13 +21,15 @@ function validar(dados) {
 
   const valorObjetivo = Number(dados.valorObjetivo);
   if (!Number.isFinite(valorObjetivo) || valorObjetivo <= 0) erros.valorObjetivo = "Informe um objetivo maior que zero.";
+  else if (valorObjetivo > VALOR_MAXIMO) erros.valorObjetivo = "Valor grande demais.";
 
   let valorAtual = dados.valorAtual == null || dados.valorAtual === "" ? 0 : Number(dados.valorAtual);
   if (!Number.isFinite(valorAtual) || valorAtual < 0) erros.valorAtual = "O valor atual não pode ser negativo.";
+  else if (valorAtual > VALOR_MAXIMO) erros.valorAtual = "Valor grande demais.";
 
   let prazo = null;
   if (dados.prazo) {
-    if (!DATA_RE.test(dados.prazo) || Number.isNaN(Date.parse(dados.prazo))) erros.prazo = "Informe um prazo válido (AAAA-MM-DD).";
+    if (!dataValida(dados.prazo)) erros.prazo = "Informe um prazo válido (AAAA-MM-DD).";
     else prazo = dados.prazo;
   }
 

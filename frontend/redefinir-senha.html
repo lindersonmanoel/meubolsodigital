@@ -123,6 +123,8 @@
     Sessao.redirecionarSeLogado();
 
     const token = new URLSearchParams(window.location.search).get("token") || "";
+    // Tira o token da barra de endereco/historico (ja esta guardado na variavel acima).
+    if (token && window.history && history.replaceState) history.replaceState(null, "", window.location.pathname);
     const form = document.getElementById("form-redefinir-senha");
     const erroGeral = document.getElementById("erro-geral");
     const sucessoGeral = document.getElementById("sucesso-geral");
